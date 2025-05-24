@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QA Scoreboard</title>
+
+  <!-- Premium serif for print -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="25x25" href="logoBlack.png" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ===== SCREEN STYLES ===== */
+    body { background: #121212; color: #eee; font-family: Arial, sans-serif; margin:0; padding:20px; }
+    .container { max-width:1100px; margin:auto; background:#1a1a1a; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.6); padding:24px; }
+
+    /* header */
+    .brand-row { position: relative; display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+    .brand-row .logo { height:50px; }
+    .brand-row .vegas-logo { position:absolute; left:50%; transform:translateX(-50%); height:150px; }
+    .brand-row .top-right { display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
+    .brand-row .top1-name { font-size:30px; font-weight:700; color:#fff; }
+    .brand-row .top1-avatar { width:92px; height:92px; border-radius:50%; overflow:hidden; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,0.7); }
+
+
+    .header-row { margin-bottom:16px; }
+    .header-row h1 { margin:0; font-size:1.5rem; font-weight:400; text-align:center; }
+    #current-month { text-transform:uppercase; font-weight:700; }
+
+    .tools { position:sticky; top:0; background:#1a1a1a; padding:12px 0; display:flex; justify-content:space-between; align-items:center; z-index:10; margin-bottom:24px; }
+    .months { display:flex; gap:8px; flex-wrap:wrap; }
+    .month-btn, .print-btn, .file-btn, .compare-btn {
+      background:#272727; color:#ccc; border:none; border-radius:6px;
+      cursor:pointer; transition:0.2s; font-size:0.95rem;
+      padding:18px 25px; display:flex; align-items:center; margin-left:7px;
+    }
+    .compare-btn { display:none; }
+    .month-btn:hover, .print-btn:hover, .file-btn:hover, .compare-btn:hover,
+    .month-btn:focus, .print-btn:focus, .file-btn:focus, .compare-btn:focus {
+      background:#333; color:#fff; box-shadow:0 2px 12px rgba(0,0,0,0.8);
+      outline:none; transform:translateY(-2px);
+    }
+    .month-btn.active {
+      background:linear-gradient(135deg,#4a90e2,#9013fe);
+      color:#fff; transform:scale(1.2); box-shadow:0 4px 16px rgba(0,0,0,0.7);
+    }
+    
+    .print-btn
+   {
+   	transform:scale(1);
+    }
+
+.print-btn:hover
+   {
+   	transform:scale(2);
+    }
+
+    table { width:100%; border-collapse:collapse; margin-bottom:24px; }
+    thead th { background:#272727; padding:12px; text-align:left; }
+    th[data-key] { cursor:pointer; }
+    th, td { padding:12px; border-bottom:1px solid #333; }
+    tbody tr { transition:background 0.2s; cursor:pointer; }
+    tbody tr:hover { background:#2a2a2a; }
+    .profile-img { width:32px; height:32px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+    tbody tr.top3 { font-size:1.2em; background:linear-gradient(90deg,rgba(74,144,226,0.1),transparent); }
+    tbody tr.top3 .profile-img { width:48px; height:48px; }
+    
+    table tbody td:nth-child(2),
+table tbody td:nth-child(3),
+table tbody td:nth-child(4),
+table tbody td:nth-child(5),
+table tbody td:nth-child(6) {
+  text-align: center;
+}
+
+    /* detail row */
+    .detail-row td { padding:0; border:0; }
+    .details-container { height:0; overflow:hidden; transition:height 0.3s ease; padding:0 12px; }
+    .detail-row.visible .details-container { padding:16px 12px; }
+
+    .detail-charts { display:flex; flex-wrap:wrap; gap:16px; justify-content:space-around; }
+    .chart-wrapper { text-align:center; font-size:0.9rem; }
+    .chart-wrapper canvas { background:#272727; border-radius:50%; }
+
+    /* shared notes/PTO/sick area */
+    .notes-menu { display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
+    .note-toggle {
+      flex:1; padding:8px; border:none; border-radius:6px;
+      color:#fff; cursor:pointer; transition:transform 0.2s; font-size:0.9rem;
+      background:#4a90e2;
+    }
+    .note-toggle.has-note { background:#ff8c00; }
+    .note-toggle.active { transform:scale(1); }
+    /* fixed 150px tall, with a border when open */
+    
+    
+    /* detail header with print button */
+    .details-header { position:relative; margin-bottom:12px; }
+    .details-header h3 { margin:0; }
+    .detail-print-btn {
+      position:absolute; top:0; right:0;
+      background:linear-gradient(135deg,#4a90e2,#9013fe);
+      border:none; color:#fff; padding:6px 12px; border-radius:6px;
+      cursor:pointer; transition:0.2s;
+    }
+    .detail-print-btn:hover { opacity:0.9; }
+    
+
+/* your wrapper that actually pushes/pulls the rows */
+.details-container {
+  overflow: hidden;
+  transition: height 0.3s ease;
+}
+
+.notes-detail-container {
+  box-sizing: border-box;
+  padding: 0 12px;
+  /* REMOVE the permanent 12px top-margin */
+  margin-top: 0;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: padding 0.3s ease, border-color 0.3s ease;
+}
+
+.notes-detail-container.open {
+  /* only when open do we get that 12px gap and padding */
+  margin-top: 12px;
+  padding: 12px;
+  min-height: 150px;
+}
+
+/* give each toggle button a custom property for its “highlight” colour */
+.note-toggle {
+  --toggle-border-color: #4a90e2;   /* default “blue” */
+  transition: transform 0.2s ease;
+}
+
+/* override for any button that has-note (i.e. your orange ones) */
+.note-toggle.has-note {
+  --toggle-border-color: #ff8c00;
+}
+
+/* when active, scale up and draw a 2px border in the button’s colour */
+.note-toggle.active {
+  transform: scale(1.1);
+  border: 2px solid var(--toggle-border-color);
+}
+
+
+
+    /* compare section & close */
+    #compare-container { position:relative; display:none; margin-top:24px; margin-left:14px; }
+    #close-compare {
+      position:absolute; top:8px; right:8px; z-index:10;
+      background:none; border:none; color:#ccc; font-size:1.2rem; cursor:pointer; transition:0.2s;
+    }
+    #close-compare:hover { color:#fff; }
+
+    .compare-row {
+      display:grid; grid-template-columns:140px 1fr 1fr;
+      align-items:center; margin-bottom:16px; padding:8px;
+      background:#1f1f1f; border-radius:6px;
+    }
+    .compare-label { grid-column:1; text-align:center; font-weight:100; font-size:1.5rem; }
+    .compare-player {
+      display:flex; transition:transform .2s, opacity .2s;
+    }
+    .compare-player:first-of-type { grid-column:2; justify-content:center; }
+    .compare-player:last-of-type  { grid-column:3; justify-content:center; }
+    .compare-player img { width:38px; height:38px; border-radius:50%; }
+    .compare-player .name  { font-weight:400; margin-left:8px; font-size:0.8rem; }
+    .compare-player .score { color:#aaa; margin-left:8px; margin-top:4px; }
+    .compare-player.winner .score { color:#fff; }
+    .compare-player.winner { transform:scale(1.3); opacity:1; }
+    .compare-player.loser  { transform:scale(1);   opacity:0.5; }
+
+
+.compare-toggle {
+  background-color: #000;        /* solid black */
+  color: #fff;                   /* white text */
+  border: none;                  
+  border-radius: 20px;           /* nice pill shape */
+  padding: 8px 16px;             /* space around the label */
+  font-size: 0.9rem;             
+  font-weight: 600;              /* a bit bolder */
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.compare-toggle:hover {
+  background-color: #222;        /* dark gray on hover */
+}
+
+.compare-toggle:active {
+  transform: scale(0.97);        /* subtle press effect */
+}
+
+/* big bold rank badge in place of an image */
+.rank-label {
+  display: inline-block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #4a90e2;         /* or whatever highlight colour you like */
+  margin-right: 12px;
+  width: 48px;            /* match your old avatar size for alignment */
+  text-align: center;
+}
+
+    @media print {
+      .compare-toggle, .tools, .detail-row, #close-compare, #compare-container { display:none !important; }
+      body, .container { background:#fff !important; color:#000 !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="scoreboard-container">
+    <div class="brand-row">
+      <img src="logo.png" class="logo" alt="Hilton Logo">
+      <img src="vegas.png" class="vegas-logo" alt="Vegas Logo">
+      <div class="top-right">
+        <div class="top1-name" id="top-overall">#1: —</div>
+      </div>
+    </div>
+
+    <div class="header-row">
+      <h1>Elara, <span id="current-month">MAY</span>, scoreboard</h1>
+    </div>
+
+    <div class="tools">
+      <div class="months" id="months-container"></div>
+      <button class="compare-btn" id="compare-btn">🔍 Compare Selected</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>HGV Elara QA</th>
+          <th data-key="overall">Score</th>
+          <th data-key="accuracy">Accuracy %</th>
+          <th data-key="rescission">Rescission %</th>
+          <th data-key="transactions">Transactions</th>
+          <th data-key="issues">Open Issues</th>
+          <th id="uploadth">
+            <button class="file-btn" id="file-btn">📁</button>
+            <input type="file" id="file-input" accept=".xlsx" style="display:none">
+          </th>
+          <th>
+            <button class="print-btn" id="print-btn" style="display:none;">🖨️</button>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="scoreboard-body"></tbody>
+    </table>
+
+    <div id="compare-container">
+      <button id="close-compare" aria-label="Close Comparison">✖</button>
+      <h2>Comparison</h2>
+      <div id="compare-rows"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable"></script>
+  <script>
+    let howManyCompareSelected = 0;
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    let currentMonth = "May";
+    const scoreboardData = {}, sortConfig = { column:'overall', direction:'desc' }, compareSelection = new Set();
+
+    document.addEventListener("DOMContentLoaded", ()=>{
+      initUI();
+      attemptFetchExcel();
+      document.getElementById('close-compare').addEventListener('click', ()=>{
+        document.getElementById('compare-container').style.display='none';
+        document.getElementById('scoreboard-container').scrollIntoView({ behavior:'smooth' });
+      });
+    });
+
+    function initUI(){
+      const mc = document.getElementById("months-container");
+      months.forEach(m=>{
+        const b=document.createElement("button");
+        b.className="month-btn"; b.textContent=m; b.dataset.month=m;
+        b.onclick=()=>selectMonth(m,b);
+        mc.appendChild(b);
+      });
+
+      document.getElementById("file-btn").onclick    = ()=>document.getElementById("file-input").click();
+      document.getElementById("compare-btn").onclick = showComparison;
+      document.getElementById("print-btn").onclick   = downloadReport;
+      document.getElementById("file-input").onchange = e=>{
+        const f=e.target.files[0]; if(!f) return;
+        const r=new FileReader(); r.onload=ev=>parseWorkbook(ev.target.result);
+        r.readAsArrayBuffer(f);
+      };
+
+      document.querySelectorAll('thead th[data-key]').forEach(th=>{
+        th.onclick=()=>{
+          const key=th.dataset.key;
+          if(sortConfig.column===key) sortConfig.direction = sortConfig.direction==='asc'?'desc':'asc';
+          else { sortConfig.column=key; sortConfig.direction='asc'; }
+          renderTable(currentMonth);
+        };
+      });
+
+      selectMonth(currentMonth, document.querySelector(`.month-btn[data-month="${currentMonth}"]`));
+    }
+
+    function attemptFetchExcel(){
+      fetch("Elara.xlsx")
+        .then(r=>r.ok? r.arrayBuffer(): Promise.reject())
+        .then(parseWorkbook)
+        .catch(_=>{
+          const sr=(_spPageContextInfo&&_spPageContextInfo.webServerRelativeUrl)||"";
+          const url=`${window.location.origin}${sr}/_api/web/getfilebyserverrelativeurl('${sr}/SiteAssets/Elara.xlsx')/$value`;
+          fetch(url,{credentials:'same-origin'})
+            .then(r=>r.ok? r.arrayBuffer(): Promise.reject())
+            .then(parseWorkbook)
+            .catch(err=>console.error("Excel load failed",err));
+        });
+    }
+
+    function parseWorkbook(ab){
+      const wb=XLSX.read(ab,{type:"array"});
+      wb.SheetNames.forEach(sheet=>{
+        if(!months.includes(sheet)) return;
+        const raw = XLSX.utils.sheet_to_json(wb.Sheets[sheet],{defval:""});
+        scoreboardData[sheet] = raw.map(r=>({
+          name:       r["Quality Assurance"]||"N/A",
+          accuracy:   Number(r["Accuracy"])||0,
+          rescission: Number(r["Rescission"])||0,
+          transactions:Number(r["Transactions"])||0,
+          issues:     Number(r["Open Issues"])||0,
+          overall:    Number(r["Overall"])||0,
+
+          accuracyTarget:    Number(r["Accuracy Target"])   ||100,
+          rescissionTarget:  Number(r["Rescission Target"]) ||100,
+          transactionsTarget: raw.reduce((s,u)=>s + (Number(u["Transactions"])||0),0),
+          issuesTarget:       raw.reduce((s,u)=>s + (Number(u["Open Issues"])||0),0),
+          overallTarget:     Number(r["Overall Target"])    ||10,
+
+          NTF:     r["NTF"]       ||"",
+          Verbal:  r["Verbal"]    ||"",
+          Written: r["Written"]   ||"",
+          Final:   r["Final"]     ||"",
+          PTO:     r["PTO"]       ||"",
+          "Sick Time": r["Sick Time"]||"",
+
+          img: `https://i.pravatar.cc/150?img=${1+Math.floor(Math.random()*70)}`
+        }));
+      });
+
+      document.getElementById("file-btn").style.display    ="none";
+      document.getElementById("file-input").style.display ="none";
+      document.getElementById("uploadth").style.display   ="none";
+      document.getElementById("print-btn").style.display  ="block";
+
+      selectMonth(currentMonth, document.querySelector(`.month-btn[data-month="${currentMonth}"]`));
+    }
+
+    function selectMonth(mon,btn){
+      document.querySelectorAll(".month-btn.active").forEach(x=>x.classList.remove("active"));
+      btn?.classList.add("active");
+      currentMonth=mon;
+      document.getElementById("current-month").textContent=mon.toUpperCase();
+      renderTable(mon);
+      updateTopOverall(mon);
+      document.getElementById("compare-container").style.display='none';
+      compareSelection.clear(); howManyCompareSelected=0;
+    }
+
+    function renderTable(mon){
+      const tb=document.getElementById("scoreboard-body"); tb.innerHTML="";
+      const colIdx={overall:1,accuracy:2,rescission:3,transactions:4,issues:5};
+      const key=sortConfig.column, idx=colIdx[key], lowBetter=(key==="rescission"||key==="issues");
+      (scoreboardData[mon]||[]).slice().sort((a,b)=>{
+        return sortConfig.direction==='asc'? a[key]-b[key] : b[key]-a[key];
+      }).forEach((r,i)=>{
+        const suf=r.name.replace(/\W+/g,'-');
+        const tr=document.createElement("tr");
+        if(i<3) tr.classList.add("top3");
+        tr.innerHTML=`
+          <td><span class="rank-label">#${i+1}</span>${r.name}</td>
+          <td>${r.overall}</td><td>${r.accuracy}%</td><td>${r.rescission}%</td>
+          <td>${r.transactions}</td><td>${r.issues}</td>
+          <td><button class="compare-toggle" data-name="${r.name}">Compare</button></td>`;
+        const cells=tr.querySelectorAll("td");
+        cells.forEach(td=>td.style.color="white");
+        const met= lowBetter? r[key]<=r[key+"Target"] : r[key]>=r[key+"Target"];
+        cells[idx].style.color= met? "#4a90e2":"#ff8c00";
+
+        const detailTr=document.createElement("tr");
+        detailTr.className="detail-row";
+        detailTr.innerHTML=`
+          <td colspan="7">
+            <div class="details-container">
+              <div class="details-header">
+                <h3>Details for ${r.name}</h3>
+                <button class="detail-print-btn">🖨️</button>
+              </div>
+              <div class="detail-charts">
+                ${['overall','accuracy','rescission','transactions','issues'].map(k=>{
+                  const lbl={overall:'Overall',accuracy:'Accuracy',rescission:'Rescission',transactions:'Transactions',issues:'Open Issues'}[k];
+                  return `<div class="chart-wrapper">
+                    <canvas id="chart-${suf}-${k}" width="120" height="120"></canvas>
+                    <p>${lbl}</p>
+                  </div>`;
+                }).join('')}
+              </div>
+              <div class="notes-menu">
+                ${['NTF','Verbal','Written','Final','PTO','Sick Time'].map(field=>{
+                  const has=(r[field]||"").trim()!=="";
+                  return `<button class="note-toggle ${has?'has-note':'no-note'}" data-key="${field}">${field}</button>`;
+                }).join('')}
+              </div>
+              <div class="notes-detail-container"></div>
+            </div>
+          </td>`;
+        const container=detailTr.querySelector('.details-container');
+        tr.addEventListener('click',()=>{
+          if(detailTr.classList.contains('visible')){
+            const h=container.scrollHeight; container.style.height=h+'px';
+            requestAnimationFrame(()=>container.style.height='0');
+            detailTr.classList.remove('visible');
+          } else {
+            detailTr.classList.add('visible');
+            requestAnimationFrame(()=>container.style.height=container.scrollHeight+'px');
+            drawDetailCharts(r);
+          }
+        });
+
+        // — NEW: individual print — 
+        detailTr.querySelector('.detail-print-btn')
+          .addEventListener('click', ev=>{
+            ev.stopPropagation();
+            printEmployee(r);
+          });
+
+// 1) grab the two elements we need
+const detailContainer = detailTr.querySelector('.details-container');
+const detailBox       = detailTr.querySelector('.notes-detail-container');
+const toggles         = Array.from(detailTr.querySelectorAll('.note-toggle'));
+
+// 2) internal state
+let notesOpened = false;
+let baseHeight  = 0;
+
+toggles.forEach(btn => {
+  btn.addEventListener('click', ev => {
+    ev.stopPropagation();
+    const isActive = btn.classList.contains('active');
+
+    // ——— CASE A: clicking the same active button → collapse everything ———
+    if (isActive) {
+      btn.classList.remove('active');
+      detailBox.classList.remove('open');
+      detailBox.textContent = '';
+      notesOpened = false;
+
+      // animate panel back up
+      requestAnimationFrame(() => {
+        detailContainer.style.height = detailContainer.scrollHeight - baseHeight + 150 + 'px';
+      });
+
+
+      return;
+    }
+
+    // ——— CASE B: nothing’s open yet → first open, record height & expand ———
+    if (!notesOpened) {
+      baseHeight = detailContainer.scrollHeight;
+      notesOpened = true;
+
+      // activate this one
+      btn.classList.add('active');
+      detailBox.textContent = r[btn.dataset.key] || "";
+      detailBox.style.borderColor =
+        getComputedStyle(btn).getPropertyValue('--toggle-border-color').trim();
+      detailBox.classList.add('open');
+
+      // animate container down
+      requestAnimationFrame(() => {
+        detailContainer.style.height = detailContainer.scrollHeight + 'px';
+      });
+
+    // ——— CASE C: panel already open but different button → just swap content ———
+    } else {
+      // clear previous
+      toggles.forEach(b => b.classList.remove('active'));
+
+      // activate this one
+      btn.classList.add('active');
+      detailBox.textContent = r[btn.dataset.key] || "";
+      detailBox.style.borderColor =
+        getComputedStyle(btn).getPropertyValue('--toggle-border-color').trim();
+
+      // **no height change here**, so the panel stays put
+    }
+  });
+});
+
+        // compare logic (unchanged)
+        const cmp=tr.querySelector('.compare-toggle');
+        cmp.addEventListener('click', ev=>{
+          ev.stopPropagation();
+          const name=cmp.dataset.name;
+          if(cmp.textContent==='Compare'){
+            howManyCompareSelected++; compareSelection.add(name);
+            cmp.textContent='Remove'; cmp.classList.add('remove'); tr.style.opacity='0.5';
+            if(howManyCompareSelected===2) setTimeout(showComparison,200);
+          } else {
+            howManyCompareSelected--; compareSelection.delete(name);
+            cmp.textContent='Compare'; cmp.classList.remove('remove'); tr.style.opacity='1';
+          }
+        });
+
+        tb.appendChild(tr);
+        tb.appendChild(detailTr);
+      });
+    }
+
+function updateTopOverall(mon){
+  const arr = (scoreboardData[mon]||[]).sort((a,b)=>b.overall-a.overall);
+  const top = arr[0]||{};
+  document.getElementById("top-overall").textContent = `#1: ${top.name||'—'}`;
+
+  // replace the image entirely with our text label
+  const avatar = document.getElementById("top1-avatar");
+  avatar.textContent = "Quality Assurance";
+  avatar.style.fontSize   = "1.2rem";
+  avatar.style.fontWeight = "700";
+  avatar.style.color      = "#fff";
+}
+
+    function drawDetailCharts(r){
+      const suf=r.name.replace(/\W+/g,'-');
+      const metrics=[
+        { key:'overall',     val:r.overall,      max:r.overallTarget      },
+        { key:'accuracy',    val:r.accuracy,     max:r.accuracyTarget     },
+        { key:'rescission',  val:r.rescission,   max:r.rescissionTarget   },
+        { key:'transactions',val:r.transactions, max:r.transactionsTarget },
+        { key:'issues',      val:r.issues,       max:r.issuesTarget       }
+      ];
+      metrics.forEach(m=>{
+        const id=`chart-${suf}-${m.key}`;
+        const wrapper=document.getElementById(id).closest('.chart-wrapper');
+        const labelEl=wrapper.querySelector('p');
+        const lowBetter=(m.key==='rescission'||m.key==='issues');
+        const met=lowBetter? m.val<=m.max : m.val>=m.max;
+        let data,bg;
+        if(met){ data=[m.max,0]; bg=['#4a90e2','#333']; }
+        else {
+          if(lowBetter) data=[m.max,m.val-m.max];
+          else data=[m.val,m.max-m.val];
+          bg=['#4a90e2','#ff8c00'];
+        }
+        const ctx=document.getElementById(id).getContext('2d');
+        new Chart(ctx,{ type:'doughnut',
+          data:{datasets:[{data,backgroundColor:bg,hoverOffset:4}]},
+          options:{cutout:'70%',responsive:true,plugins:{legend:{display:false}}},
+          plugins:[{
+            id:'centerText',
+            beforeDraw(chart){
+              const {ctx,width:W,height:H}=chart;
+              ctx.save();
+              const fs=Math.floor(Math.min(W,H)/5);
+              ctx.font=`bold ${fs}px Arial`;
+              ctx.textBaseline='middle';
+              ctx.fillStyle=met? '#4a90e2':'#ff8c00';
+              const suf=(m.key==='accuracy'||m.key==='rescission')? '%' : '';
+              const txt=m.val+suf;
+              const x=(W-ctx.measureText(txt).width)/2;
+              const y=H/2;
+              ctx.fillText(txt,x,y);
+              ctx.restore();
+            }
+          }]
+        });
+        labelEl.style.color=met? '#4a90e2':'#ff8c00';
+      });
+    }
+
+    function showComparison(){
+      if(compareSelection.size!==2) return alert("Select exactly 2 employees.");
+      const [n1,n2]=[...compareSelection];
+      const d1=scoreboardData[currentMonth].find(r=>r.name===n1),
+            d2=scoreboardData[currentMonth].find(r=>r.name===n2);
+      const labels=['Overall','Accuracy','Rescission','Transactions','Open Issues'],
+            keys  =['overall','accuracy','rescission','transactions','issues'],
+            highBetter=new Set(['Overall','Accuracy','Transactions']);
+      const container=document.getElementById('compare-rows');
+      container.innerHTML='';
+      labels.forEach((lab,i)=>{
+        const v1=d1[keys[i]], v2=d2[keys[i]];
+        let p1Win,p2Win;
+        if(v1===v2)      { p1Win=p2Win=true; }
+        else if(highBetter.has(lab)){ p1Win=v1>v2; p2Win=v2>v1; }
+        else             { p1Win=v1<v2; p2Win=v2<v1; }
+        const row=document.createElement('div');
+        row.className='compare-row';
+        row.innerHTML=`
+          <div class="compare-label">${lab}</div>
+          <div class="compare-player ${p1Win?'winner':'loser'}">
+            <img src="${d1.img}" alt="${n1}"><div class="name">${n1}</div><div class="score">${v1}</div>
+          </div>
+          <div class="compare-player ${p2Win?'winner':'loser'}">
+            <img src="${d2.img}" alt="${n2}"><div class="name">${n2}</div><div class="score">${v2}</div>
+          </div>`;
+        container.appendChild(row);
+      });
+      howManyCompareSelected=0;
+      compareSelection.clear();
+      document.querySelectorAll('.compare-toggle').forEach(btn=>{
+        btn.textContent='Compare'; btn.classList.remove('remove');
+        btn.closest('tr').style.opacity='1';
+      });
+      const cmp=document.getElementById('compare-container');
+      cmp.style.display='block';
+      cmp.scrollIntoView({behavior:'smooth'});
+    }
+
+
+// ——— PDF generation ———
+function downloadReport() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 40;
+  let y = margin;
+
+  // ——— 1) Title + FULL MONTH of YEAR ———
+  doc.setFont("Playfair Display","bold").setFontSize(28);
+  doc.text("Elara at Hilton Grand Vacations", margin, y);
+
+  // 1) define full month and column names:
+const fullMonthNames = {
+  Jan:"January",Feb:"February",Mar:"March",
+  Apr:"April",May:"May",Jun:"June",
+  Jul:"July",Aug:"August",Sep:"September",
+  Oct:"October",Nov:"November",Dec:"December"
+};
+const fullColumnNames = {
+  overall:    "Score",
+  accuracy:   "Accuracy",
+  rescission: "Rescission",
+  transactions:"Transactions",
+  issues:     "Open Issues"
+};
+
+// 2) grab the one you’re sorted on:
+const sortedKey      = sortConfig.column;                  // e.g. "transactions"
+const sortLabel      = fullColumnNames[sortedKey];         // e.g. "Transactions"
+const monthLabel     = fullMonthNames[currentMonth];       // e.g. "MARCH"
+const yearLabel      = new Date().getFullYear();           // e.g. 2025
+
+// 3) build two pieces of text, category+month and “ of YEAR”
+const leftPart  = `${sortLabel.toUpperCase()}    ||    ${monthLabel}`;
+const rightPart = ` of ${yearLabel}`;
+
+// 4) measure & draw them in bold+normal exactly as before
+doc.setFont("Montserrat","bold").setFontSize(16);
+const wLeft  = doc.getTextWidth(leftPart);
+doc.setFont("Montserrat","normal");
+const wRight = doc.getTextWidth(rightPart);
+
+const startX = pageW - margin - (wLeft + wRight);
+
+// draw the category+month in bold
+doc.setFont("Montserrat","bold")
+   .text(leftPart, startX, y);
+
+// draw the “ of YEAR” in normal
+doc.setFont("Montserrat","normal")
+   .text(rightPart, startX + wLeft, y);
+
+// then advance your y and draw the underline as you already have:
+y += 10;
+doc.setDrawColor(0);
+doc.setLineWidth(0.5);
+doc.line(margin, y, pageW - margin, y);
+
+  // ——— 2) Prepare sorted data rows ———
+  const raw = (scoreboardData[currentMonth]||[]).slice()
+    .sort((a,b)=>
+      sortConfig.direction==="asc"
+        ? a[sortConfig.column]-b[sortConfig.column]
+        : b[sortConfig.column]-a[sortConfig.column]
+    );
+
+  const rows = raw.map((r,i)=>[
+    `#${i+1}`,        // prefix with #
+    r.name,
+    r.overall,
+    `${r.accuracy}%`,
+    `${r.rescission}%`,
+    r.transactions,
+    r.issues
+  ]);
+
+  const headers    = ["Rank","QA Specialist","Score","Accuracy","Rescission","Transactions","Open Issues"];
+  const headerKeys = ["rank","name","overall","accuracy","rescission","transactions","issues"];
+  const sortedCol  = headerKeys.indexOf(sortConfig.column);
+
+  // ——— 3) Dark, rounded header bar ———
+  y += 20;
+  const colCount = headers.length;
+  const tableX   = margin;
+  const tableW   = pageW - margin*2;
+  const colW     = tableW / colCount;
+  const headerH  = 30;
+
+  doc.setFillColor(30,30,30)
+     .roundedRect(tableX, y, tableW, headerH, 6,6,"F");
+
+  headers.forEach((txt,i)=>{
+    const isRank = (i===0);
+    const isSorted = (i===sortedCol);
+    let fontSize = 12;
+    if (isSorted) fontSize = 12*1.5;      // 1.5× for sorted
+    else if (isRank) fontSize = 14;       // a bit bigger for #
+    doc.setFont("Montserrat", isSorted||isRank ? "bold":"normal")
+       .setFontSize(fontSize)
+       .setTextColor(255)
+       .text(
+         txt,
+         tableX + i*colW + colW/2,
+         y + headerH/2 + 5,
+         { align:"center" }
+       );
+  });
+
+  // ——— 4) Body rows w/ custom styling ———
+  y += headerH + 4;
+  doc.autoTable({
+    startY: y,
+    body: rows,
+    theme: "plain",
+    showHead: "never",
+    margin: { left: tableX, right: margin },
+    styles: {
+      font: "Montserrat",
+      fontSize: 11,
+      textColor: [60,60,60],
+      valign: "middle"
+    },
+    columnStyles: headers.reduce((acc,_,i)=>{
+      acc[i] = {
+        halign: (i===1 ? "center" : "center"),
+        cellWidth: colW
+      };
+      return acc;
+    }, {}),
+
+
+didParseCell: function(data) {
+  if (data.section !== 'body') return;
+
+  const rowIdx   = data.row.index;
+  const colIdx   = data.column.index;
+  const cell     = data.cell;
+  const baseSize = 10.5;
+  let   f        = baseSize;
+
+  // highlight top-3
+  if (rowIdx < 3) {
+    cell.styles.fillColor = [245,245,245];
+    f *= 1.2;          // bump top-3 by 20%
+  }
+
+  // bump sorted column
+  if (colIdx === sortedCol) {
+    f *= 1.5;
+  }
+
+  cell.styles.fontSize = Math.round(f);
+
+  // bold #1’s rank (col 0), name (col 1) and sorted-cell
+  if (rowIdx === 0 && (colIdx === 0 || colIdx === 1 || colIdx === sortedCol)) {
+    cell.styles.fontStyle = 'bold';
+  }
+
+  // ultra-thin separator
+  doc.setDrawColor(200,200,200)
+     .setLineWidth(0.2)
+     .line(tableX, cell.y + cell.height, tableX + tableW, cell.y + cell.height);
+}
+
+
+  });
+
+  // ——— 5) Save ———
+  doc.save(`Elara-${currentMonth}.pdf`);
+}
+
+
+// ——— NEW: print a single employee ———
+function printEmployee(r) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 40;
+  let y = margin;
+
+  // ——— Header ———
+  doc.setFont("Playfair Display","bold").setFontSize(28);
+  y += 10;
+  doc.text("Elara at Hilton Grand Vacations", margin, y);
+  y += 40;
+
+// 1) Build the two pieces of text
+const fullMonthNames = {
+  Jan: "JANUARY", Feb: "FEBRUARY", Mar: "MARCH",
+  Apr: "APRIL",   May: "MAY",      Jun: "JUNE",
+  Jul: "JULY",    Aug: "AUGUST",   Sep: "SEPTEMBER",
+  Oct: "OCTOBER", Nov: "NOVEMBER", Dec: "DECEMBER"
+};
+const monthText = fullMonthNames[currentMonth];
+const yearText  = ` of ${new Date().getFullYear()}`;
+
+// 2) Tell jsPDF what font/size you’ll be using _before_ measuring.
+doc.setFont("Montserrat","bold");
+doc.setFontSize(16);
+
+// 3) Measure both pieces
+const wMonth = doc.getTextWidth(monthText);
+doc.setFont("Montserrat","normal");
+const wYear  = doc.getTextWidth(yearText);
+
+// 4) Compute your starting‐X so that [month+year] ends at (pageW − margin)
+const totalW = wMonth + wYear;
+const startX = pageW - margin - totalW;
+
+// 5) Finally draw them
+//   a) month in bold
+doc.setFont("Montserrat","bold");
+doc.text(monthText, startX, y);
+//   b) year portion in normal
+doc.setFont("Montserrat","normal");
+doc.text(yearText, startX + wMonth, y);
+
+  y += 5;
+
+  // separator
+  doc.setDrawColor(0);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageW - margin, y);
+  y += 45;
+
+  // ——— Employee Name ———
+  const leftText = r.name;
+  doc.setFont("Montserrat","bold").setFontSize(36);
+  doc.text(leftText, pageW/2, y, { align:"center" });
+
+
+  y += 30;
+
+  // ——— Compute prev-month & current data ———
+  const monthIdx  = months.indexOf(currentMonth);
+  const prevMonth = months[(monthIdx + 11) % 12];
+  const prevData  = (scoreboardData[prevMonth]||[]).find(u=>u.name===r.name) || {};
+  const dataThis  = scoreboardData[currentMonth] || [];
+
+  const metricsConfig = [
+    { key:"accuracy",     label:"Accuracy",        suffix:"%", better:"high" },
+    { key:"transactions", label:"Transactions",    suffix:"",  better:"high" },
+    { key:"rescission",   label:"Rescission Rate", suffix:"%", better:"low"  },
+    { key:"issues",       label:"Open Issues",     suffix:"",  better:"low"  },
+    { key:"overall",      label:"Score",           suffix:"",  better:"high" }
+  ];
+
+  const body = metricsConfig.map(cfg => {
+    const cur = r[cfg.key];
+    // Δ vs last month
+    let delta = "-";
+    if (prevData[cfg.key] != null) {
+      const diff = cur - prevData[cfg.key];
+      const sign = diff >= 0 ? "+" : "-";
+      const val  = Math.abs(diff).toFixed(
+        (cfg.key==="accuracy"||cfg.key==="rescission")?2:0
+      );
+      delta = cfg.suffix==="%" ? `${sign}${val} %` : `${sign}${val}`;
+    }
+    // rank
+    const sorted = [...dataThis].sort((a,b)=> {
+      return cfg.better==="high"
+        ? b[cfg.key] - a[cfg.key]
+        : a[cfg.key] - b[cfg.key];
+    });
+    const idx  = sorted.findIndex(u=>u.name===r.name);
+    const rank = idx>=0?`${idx+1}/${sorted.length}`:"–";
+    return [ cfg.label, `${cur}${cfg.suffix}`, delta, rank ];
+  });
+
+
+// ——— 4) Metrics table ———
+  const tableX  = margin;
+  const tableW  = pageW - margin * 2;
+  const headerH = 30;
+  const colCount = 4;
+  const colW     = tableW / colCount;
+
+  // 4a) dark rounded header bar
+  doc.setFillColor(30,30,30)
+     .roundedRect(tableX, y, tableW, headerH, 6, 6, 'F')
+     .setFont("Montserrat", "bold").setFontSize(12).setTextColor(255,255,255);
+  ["Metric","Value","+/- vs Last Month","Rank"].forEach((txt,i) => {
+    doc.text(
+      txt,
+      tableX + i*colW + colW/2,
+      y + headerH/2 + 5,
+      { align: "center" }
+    );
+  });
+  y += headerH + 4;
+
+  // 4b) body rows (plain theme, full-width columns)
+  doc.autoTable({
+    startY: y,
+    body: body,
+    theme: 'plain',
+    showHead: 'never',
+    margin: { left: tableX, right: margin },
+    styles: {
+      font: 'Montserrat',
+      fontSize: 11,
+      textColor: [60,60,60],
+      cellPadding: 6,
+      valign: 'middle'
+    },
+    columnStyles: {
+      0: { halign: 'center',   cellWidth: colW },
+      1: { halign: 'center', cellWidth: colW },
+      2: { halign: 'center', cellWidth: colW },
+      3: { halign: 'center', cellWidth: colW }
+    },
+    didParseCell: function(data) {
+      if (data.section === 'body') {
+        const row   = data.row.index;
+        const cell  = data.cell;
+        // alternating gray background
+        if (row % 2 === 0) {
+          doc.setFillColor(245,245,245)
+             .rect(tableX, cell.y, tableW, cell.height, 'F');
+        }
+        // fine hairline under each row
+        doc.setDrawColor(220,220,220)
+           .setLineWidth(0.5)
+           .line(tableX, cell.y+cell.height, tableX+tableW, cell.y+cell.height);
+      }
+    }
+  });
+  y = doc.lastAutoTable.finalY + 30;
+
+  // ——— WRITE-UPS ———
+  doc.setFont("Montserrat","bold").setFontSize(14);
+  doc.text("WRITE-UPS", margin, y);
+  y += 5;
+
+  const labelSize = 10, noteSize = 12, indent = 60;
+  const maxWidth  = pageW - margin - (margin + indent);
+
+  ["NTF","Verbal","Written","Final"].forEach(label => {
+    const val = r[label] || "";
+
+    // label
+    doc.setFont("Montserrat","normal").setFontSize(labelSize).setTextColor(80);
+    doc.text(`${label}:`, margin, y);
+
+    // text
+    doc.setFont("Montserrat","italic").setFontSize(noteSize).setTextColor(0);
+    const lines = doc.splitTextToSize(val, maxWidth);
+    lines.forEach((line,i)=>{
+      const lineY = y + i*16;
+      doc.text(line, margin+indent, lineY);
+      doc.setDrawColor(200);
+      doc.setLineWidth(0.3);
+      doc.line(margin+indent, lineY+2, pageW-margin, lineY+2);
+    });
+    y += lines.length*16 + 4;
+  });
+  y += 10;
+
+// ——— PTO / SICK TIME ———
+  doc.setFont("Montserrat","bold").setFontSize(14);
+  doc.text("PTO / SICK TIME", margin, y);
+  y += 18;
+
+  // these two reflect the actual keys you created in parseWorkbook
+  const ptFields = [
+    { label: "PTO",   val: r.PTO },
+    { label: "Sick Time",  val: r["Sick Time"] }
+  ];
+
+  ptFields.forEach(({ label, val }) => {
+    // label
+    doc.setFont("Montserrat","normal")
+       .setFontSize(labelSize)
+       .setTextColor(80)
+       .text(`${label}:`, margin, y);
+
+    // value (italic, wrapping if needed)
+    doc.setFont("Montserrat","italic")
+       .setFontSize(noteSize)
+       .setTextColor(0);
+
+    const lines = doc.splitTextToSize(val, maxWidth);
+    lines.forEach((line, i) => {
+      const lineY = y + i * 16;
+      doc.text(line, margin + indent, lineY);
+      doc.setDrawColor(200)
+         .setLineWidth(0.3)
+         .line(margin + indent, lineY + 2, pageW - margin, lineY + 2);
+    });
+
+    // bump y for the next field
+    y += lines.length * 16 + 4;
+  });
+
+  // ——— SCOREBOARD ———
+  y += 30;
+  doc.setFont("Montserrat","bold").setFontSize(16);
+  doc.text("SCOREBOARD", pageW/2, y, { align:"center" });
+  y += 15;
+
+  const ranking = (scoreboardData[currentMonth]||[])
+    .slice()
+    .sort((a,b)=> b.overall - a.overall);
+  const meIndex = ranking.findIndex(u=>u.name===r.name);
+
+  const start = Math.max(0, meIndex-2);
+  const end   = Math.min(ranking.length, meIndex+3);
+  const lbBody = [];
+  if (start>0) lbBody.push(["…","…","…"]);
+  for (let i=start;i<end;i++){
+    const u = ranking[i];
+    lbBody.push([`${i+1}`, u.name, u.overall.toString()]);
+  }
+  if (end<ranking.length) lbBody.push(["…","…","…"]);
+
+  doc.autoTable({
+    startY: y,
+    head: [["Rank","Name","Score"]],
+    body: lbBody,
+    theme: "plain",
+    margin: { left: margin, right: margin },
+    styles: {
+      font: "Montserrat",
+      fontSize: 12,
+      cellPadding: 6,
+      halign: "center",
+      valign: "middle",
+      textColor: [0,0,0]
+    },
+    columnStyles: { 1:{ halign:"center" } },
+    didParseCell: function(ctx){
+      if (ctx.row.raw[1] === r.name) {
+        ctx.cell.styles.fillColor = [240,240,240];
+        ctx.cell.styles.textColor = [0,0,0];
+        ctx.cell.styles.fontSize  = 18;
+      } else {
+        ctx.cell.styles.fillColor = [255,255,255];
+      }
+    }
+  });
+
+  // ——— Save ———
+  doc.save(`${r.name.replace(/\s+/g,"_")}_${currentMonth}.pdf`);
+}
+
+    
+  </script>
+</body>
+</html>
+
