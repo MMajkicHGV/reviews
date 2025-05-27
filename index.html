@@ -629,66 +629,64 @@ document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.getElementById("login-wrapper");
   const board   = document.getElementById("scoreboard-container");
 
-  form.addEventListener("submit", async ev => {
-    ev.preventDefault();
-    err.textContent = "";
+  const loginButton = document.getElementById("loginButton");
+loginButton.addEventListener("click", e => {
+  e.preventDefault();
 
-    const user = document.getElementById("login-username")
-                    .value.trim().toLowerCase();
-    const pass = document.getElementById("login-password")
-                    .value;
+  // 1) grab the values the user typed
+  const enteredUser = document
+    .getElementById("login-username")
+    .value
+    .trim()
+    .toLowerCase();
+  const enteredPass = document
+    .getElementById("login-password")
+    .value
+    .trim();
 
-    try {
-      // ==== 1) Load Users.xlsx ====
-      const resp = await fetch("Users.xlsx");
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const buf  = await resp.arrayBuffer();
-
-      // ==== 2) Parse it with SheetJS ====
-      const wb    = XLSX.read(buf, { type: "array" });
+  // 2) fetch & parse the workbook
+  fetch("Users.xlsx")
+    .then(resp => {
+      if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching Users.xlsx`);
+      return resp.arrayBuffer();
+    })
+    .then(buffer => {
+      const wb    = XLSX.read(buffer, { type: "array" });
       const sheet = wb.Sheets["Users"];
-      const users = XLSX.utils
-                        .sheet_to_json(sheet, { defval: "" });
+      const rows  = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-      // ==== 3) For debugging: show what you typed vs. first row ====
-      const first = users[0] || {};
-      alert(
-        `You typed:\n`+
-        ` • username: ${user}\n`+
-        ` • password: ${pass}\n\n`+
-        `First row in Excel:\n`+
-        ` • username: ${ (first.Username||first.username) }\n`+
-        ` • password: ${ (first.Password||first.password) }`
-      );
+      // 3) normalize & look for a match
+      const users = rows.map(u => ({
+        username: (u.Username || u.username || "")
+                    .toLowerCase().trim(),
+        password: (u.Password || u.password || "").trim(),
+        display:  u.User     || u.user     || ""
+      }));
 
-      // ==== 4) Do the real check ====
       const match = users.find(u =>
-        String(u.Username  || u.username || "")
-          .trim().toLowerCase() === user &&
-        String(u.Password  || u.password || "")
-          .trim()           === pass
+        u.username === enteredUser &&
+        u.password === enteredPass
       );
 
-      if (!match) {
-        err.textContent = "❌ Invalid username or password";
-        return;
+      // 4) success or failure
+      if (match) {
+        // hide login, show the rest of your app
+        document.getElementById("login-wrapper").style.display     = "none";
+        document.getElementById("scoreboard-container").style.display = "block";
+
+        // now kick off your normal UI/data load
+        initUI();
+        attemptFetchExcel();
+      } else {
+        document.getElementById("login-error").textContent =
+          "Invalid username or password.";
       }
-
-      // ==== 5) SUCCESS! show the dashboard ====
-      wrapper.style.display = "none";
-      board.style.display   = "block";
-      initUI();
-      attemptFetchExcel();
-
-    } catch (loadErr) {
-      console.error(loadErr);
-      err.textContent = 
-        "⚠️ Could not load Users.xlsx. " + 
-        (loadErr.message || "");
-      // if you see an error about CORS or file://,
-      // you need to run a local server (e.g. `python3 -m http.server`)
-    }
-  });
+    })
+    .catch(err => {
+      console.error("Login system error:", err);
+      document.getElementById("login-error").textContent =
+        "⚠️ Could not load login data. Please try again later.";
+    });
 });
       
 
