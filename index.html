@@ -535,7 +535,28 @@ font-size:150%;
   </style>
 </head>
 <body>
-  <div class="container" id="scoreboard-container">
+
+
+<div id="login-wrapper" style="display:flex; align-items:center; justify-content:center; height:100vh;">
+  <form class="login-form" id="login-form">
+    <div class="flex-row">
+      <label class="lf--label" for="username">👤</label>
+      <input id="login-username" class='lf--input' placeholder='Username' type='text'>
+    </div>
+    <div class="flex-row">
+      <label class="lf--label" for="password">🔒</label>
+      <input id="login-password" class='lf--input' placeholder='Password' type='password'>
+    </div>
+    <button type="submit" class="lf--submit" id="loginButton">LOGIN</button>
+    <p id="login-error" style="color:red; font-size:0.8em;"></p>
+  </form>
+</div>
+
+
+
+
+
+  <div class="container" id="scoreboard-container" style="display:none;">
     <div class="brand-row">
       <img src="logo.png" class="logo" alt="Hilton Logo">
       <img src="vegas.png" class="vegas-logo" alt="Vegas Logo">
@@ -598,11 +619,79 @@ font-size:150%;
     let currentMonth = "May";
     const scoreboardData = {}, sortConfig = { column:'overall', direction:'desc' }, compareSelection = new Set();
 
-    document.addEventListener("DOMContentLoaded", ()=>{
+      
+      
+      
+  
+document.addEventListener("DOMContentLoaded", () => {
+  const form    = document.getElementById("login-form");
+  const err     = document.getElementById("login-error");
+  const wrapper = document.getElementById("login-wrapper");
+  const board   = document.getElementById("scoreboard-container");
+
+  form.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    err.textContent = "";
+
+    const user = document.getElementById("login-username")
+                    .value.trim().toLowerCase();
+    const pass = document.getElementById("login-password")
+                    .value;
+
+    try {
+      // ==== 1) Load Users.xlsx ====
+      const resp = await fetch("Users.xlsx");
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const buf  = await resp.arrayBuffer();
+
+      // ==== 2) Parse it with SheetJS ====
+      const wb    = XLSX.read(buf, { type: "array" });
+      const sheet = wb.Sheets["Users"];
+      const users = XLSX.utils
+                        .sheet_to_json(sheet, { defval: "" });
+
+      // ==== 3) For debugging: show what you typed vs. first row ====
+      const first = users[0] || {};
+      alert(
+        `You typed:\n`+
+        ` • username: ${user}\n`+
+        ` • password: ${pass}\n\n`+
+        `First row in Excel:\n`+
+        ` • username: ${ (first.Username||first.username) }\n`+
+        ` • password: ${ (first.Password||first.password) }`
+      );
+
+      // ==== 4) Do the real check ====
+      const match = users.find(u =>
+        String(u.Username  || u.username || "")
+          .trim().toLowerCase() === user &&
+        String(u.Password  || u.password || "")
+          .trim()           === pass
+      );
+
+      if (!match) {
+        err.textContent = "❌ Invalid username or password";
+        return;
+      }
+
+      // ==== 5) SUCCESS! show the dashboard ====
+      wrapper.style.display = "none";
+      board.style.display   = "block";
       initUI();
       attemptFetchExcel();
 
-    });
+    } catch (loadErr) {
+      console.error(loadErr);
+      err.textContent = 
+        "⚠️ Could not load Users.xlsx. " + 
+        (loadErr.message || "");
+      // if you see an error about CORS or file://,
+      // you need to run a local server (e.g. `python3 -m http.server`)
+    }
+  });
+});
+      
+
 
     function initUI(){
       const mc = document.getElementById("months-container");
@@ -1651,6 +1740,9 @@ window.addEventListener('DOMContentLoaded', () => {
       behavior: 'smooth'
     });
   });
+  
+  
+  
 });
     
   </script>
