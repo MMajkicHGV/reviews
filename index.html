@@ -2005,7 +2005,7 @@ let isValid = false;
 for (const user of users) {
   // Debug‐help: log what you’re comparing
   console.log('checking', user.username, user.password);
-  alert('checking'+ user.username + "| Password: " + user.password + "|");
+  alert('Username:|'+ user.username + "| Password: |" + user.password + "| vs entered Username : |" + u + "| and password : |"+ p +"|");
 
   if (user.username == u && user.password == p) {
     isValid = true;
