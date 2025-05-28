@@ -2004,6 +2004,7 @@ async function loadUsers() {
 
     if (!isValid) {
     alert(JSON.stringify(users, null, 2));
+     alert("entered username: "+ u +"entered password :" + p);
 
       // bad login → show error and stop
       err.textContent = 'Invalid username or password';
