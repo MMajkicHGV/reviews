@@ -2000,7 +2000,7 @@ async function loadUsers() {
 
       const me = users.find(x => x.username === u && x.password === p);
       if (!me) {
-      	alert(users.find);
+      	alert(JSON.stringify(users, null, 2));
         err.textContent = 'Invalid username or password';
         return;
       }
