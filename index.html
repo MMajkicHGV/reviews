@@ -751,7 +751,7 @@ font-size:150%;
     </div>
   </div>
 
-<div class="container blurred" id="scoreboard-container">
+<div class="container blurred">
 
   <div class="container" id="scoreboard-container" >
     <div class="brand-row">
@@ -857,8 +857,9 @@ function loadSiteFile(site) {
       
   
 document.addEventListener("DOMContentLoaded", () => {
+  loadUsers();
   loadSiteFile(siteSelected);
-      initUI();
+  initUI();
      
     
 });
@@ -1959,84 +1960,49 @@ items.forEach(btn => {
 
 
 // — 1) load and parse Users.xlsx
-let users = [];
-function loadUsers() {
-  fetch('Users.xlsx')
-    .then(r => {
-      if (!r.ok) throw new Error('Could not fetch Users.xlsx');
-      return r.arrayBuffer();
-    })
-    .then(ab => {
-      const wb = XLSX.read(ab, { type:'array' });
-      const sheet = wb.SheetNames[0];
-      const raw   = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval:'' });
-      users = raw.map(r => ({
-        fullname: String(r.User     || '').trim(),
+async function loadUsers() {
+      const resp = await fetch('Users.xlsx');
+      const ab   = await resp.arrayBuffer();
+      const wb   = XLSX.read(ab, { type:'array' });
+      const raw  = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'' });
+
+      return raw.map(r => ({
         username: String(r.Username || '').trim().toLowerCase(),
         password: String(r.Password || '').trim(),
-        access:   String(r.Access   || '')  // comma-separated
-                     .split(',')
-                     .map(s=>s.trim().toLowerCase())
-                     .filter(Boolean)
+        access:   String(r.Access   || '')
+                     .split(',').map(x=>x.trim().toLowerCase()).filter(Boolean)
       }));
-    })
-    .catch(console.error);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  loadUsers();
-});
-
-// — 2) Utility: filter the site-switcher to only allowed sites
-function applyAccessFilter(accessList) {
-  // all buttons: main + fly-out items
-  const mainBtn = document.getElementById('site-btn-main');
-  const items   = Array.from(document.querySelectorAll('.site-switcher-item'));
-  const allBtns = [ mainBtn, ...items ];
-  
-  // remove any button whose textContent isn't in the accessList
-  allBtns.forEach(btn => {
-    const name = btn.textContent.trim().toLowerCase();
-    if (!accessList.includes(name)) {
-      btn.remove();
     }
-  });
 
-  // if the current mainBtn was removed, pick the first remaining button:
-  if (!document.getElementById('site-btn-main')) {
-    const leftover = document.querySelector('.site-switcher button');
-    if (leftover) {
-      leftover.id = 'site-btn-main';
-      leftover.classList.add('active');
-    }
-  }
-}
+    (async function bootstrap() {
+      const users = await loadUsers();
 
-// — 3) Login form handler
-document.getElementById('login-form').addEventListener('submit', ev => {
-  ev.preventDefault();
-  const u = document.getElementById('login-user').value.trim().toLowerCase();
-  const p = document.getElementById('login-pass').value.trim();
-  const errBox = document.getElementById('login-error');
+      document.getElementById('login-form').addEventListener('submit', ev => {
+        ev.preventDefault();
+        const u = document.getElementById('login-user').value.trim().toLowerCase();
+        const p = document.getElementById('login-pass').value.trim();
+        const err = document.getElementById('login-error');
 
-  const user = users.find(x => x.username === u && x.password === p);
-  if (!user) {
-    errBox.textContent = 'Invalid Username or Password';
-    return;
-  }
+        const me = users.find(x => x.username === u && x.password === p);
+        if (!me) {
+          err.textContent = 'Invalid Username or Password';
+          return;
+        }
 
-  // 3a) Apply their site access
-  applyAccessFilter(user.access);
+        // (optional) applyAccessFilter(me.access) …
 
-  // 3b) Un-blur & remove overlay
-  document.getElementById('scoreboard-container').classList.remove('blurred');
-  errBox.textContent = '';
+        // un-blur the page
+        document.getElementById('scoreboard-container').classList.remove('blurred');
+        err.textContent = '';
 
-  const overlay = document.getElementById('login-overlay');
-  overlay.style.transition = 'opacity .5s ease';
-  overlay.style.opacity = 0;
-  overlay.addEventListener('transitionend', () => overlay.remove());
-});
+        // fade out & remove overlay
+        const ov = document.getElementById('login-overlay');
+        ov.style.transition = 'opacity .5s ease';
+        ov.style.opacity = 0;
+        ov.addEventListener('transitionend', () => ov.remove());
+      });
+    })();
+
 
     
   </script>
