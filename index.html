@@ -751,9 +751,7 @@ font-size:150%;
     </div>
   </div>
 
-<div class="container blurred">
-
-  <div class="container" id="scoreboard-container" >
+<div class="container blurred" id="scoreboard-container">
     <div class="brand-row">
       <img src="logo.png" class="logo" alt="Hilton Logo">
       <img src="vegas.png" class="vegas-logo" alt="Vegas Logo">
@@ -813,7 +811,6 @@ font-size:150%;
   <div id="compare-rows"></div>
 </div>
 </div>
-  </div>
 </div>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2/dist/jspdf.umd.min.js"></script>
@@ -857,7 +854,6 @@ function loadSiteFile(site) {
       
   
 document.addEventListener("DOMContentLoaded", () => {
-  loadUsers();
   loadSiteFile(siteSelected);
   initUI();
      
@@ -1961,48 +1957,63 @@ items.forEach(btn => {
 
 // — 1) load and parse Users.xlsx
 async function loadUsers() {
+    try {
       const resp = await fetch('Users.xlsx');
-      const ab   = await resp.arrayBuffer();
-      const wb   = XLSX.read(ab, { type:'array' });
-      const raw  = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'' });
+      if (!resp.ok) {
+        throw new Error(`Network response was not OK (${resp.status})`);
+      }
+      const ab  = await resp.arrayBuffer();
+      const wb  = XLSX.read(ab, { type: 'array' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
       return raw.map(r => ({
         username: String(r.Username || '').trim().toLowerCase(),
         password: String(r.Password || '').trim(),
-        access:   String(r.Access   || '')
-                     .split(',').map(x=>x.trim().toLowerCase()).filter(Boolean)
+        access: (String(r.Access || '')
+                   .split(',')
+                   .map(x => x.trim().toLowerCase())
+                   .filter(Boolean))
       }));
+    } catch (e) {
+      console.error('Failed to load or parse Users.xlsx:', e);
+      // show a user-friendly error
+      const errBox = document.getElementById('login-error');
+      if (errBox) {
+        errBox.textContent = 'Unable to load user list. Please try again later.';
+      }
+      // return an empty array so the rest of your code doesn’t blow up
+      return [];
     }
+  }
 
-    (async function bootstrap() {
-      const users = await loadUsers();
+  (async function bootstrap() {
+    const users = await loadUsers();
 
-      document.getElementById('login-form').addEventListener('submit', ev => {
-        ev.preventDefault();
-        const u = document.getElementById('login-user').value.trim().toLowerCase();
-        const p = document.getElementById('login-pass').value.trim();
-        const err = document.getElementById('login-error');
+    document.getElementById('login-form')
+            .addEventListener('submit', ev => {
+      ev.preventDefault();
+      const u   = document.getElementById('login-user').value.trim().toLowerCase();
+      const p   = document.getElementById('login-pass').value.trim();
+      const err = document.getElementById('login-error');
+      err.textContent = '';  // clear any previous message
 
-        const me = users.find(x => x.username === u && x.password === p);
-        if (!me) {
-          err.textContent = 'Invalid Username or Password';
-          return;
-        }
+      const me = users.find(x => x.username === u && x.password === p);
+      if (!me) {
+      	alert(users.find);
+        err.textContent = 'Invalid username or password';
+        return;
+      }
 
-        // (optional) applyAccessFilter(me.access) …
-
-        // un-blur the page
-        document.getElementById('scoreboard-container').classList.remove('blurred');
-        err.textContent = '';
-
-        // fade out & remove overlay
-        const ov = document.getElementById('login-overlay');
-        ov.style.transition = 'opacity .5s ease';
-        ov.style.opacity = 0;
-        ov.addEventListener('transitionend', () => ov.remove());
-      });
-    })();
-
+      // success: remove blur + overlay
+      document.getElementById('scoreboard-container')
+              .classList.remove('blurred');
+      const ov = document.getElementById('login-overlay');
+      ov.style.transition = 'opacity .5s';
+      ov.style.opacity    = 0;
+      ov.addEventListener('transitionend', () => ov.remove());
+    });
+  })();
 
     
   </script>
