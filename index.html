@@ -1990,21 +1990,31 @@ async function loadUsers() {
   (async function bootstrap() {
     const users = await loadUsers();
 
-   document.getElementById('login-form').addEventListener('submit', async ev => {
+document
+  .getElementById('login-form')
+  .addEventListener('submit', async ev => {
     ev.preventDefault();
     const u   = document.getElementById('login-user').value.trim().toLowerCase();
     const p   = document.getElementById('login-pass').value.trim();
     const err = document.getElementById('login-error');
     err.textContent = '';  // clear old errors
 
-      const isValid = users.some(user =>
-  user.username === u &&
-  user.password === p
-);
+    // after you’ve loaded “users” and read in “u” + “p”:
+let isValid = false;
+
+for (const user of users) {
+  // Debug‐help: log what you’re comparing
+  console.log('checking', user.username, user.password);
+  alert('checking'+ user.username + "| Password: " + user.password + "|";
+
+  if (user.username === u && user.password === p) {
+    isValid = true;
+    break;    // stop as soon as you find a match
+  }
+}
 
     if (!isValid) {
     alert(JSON.stringify(users, null, 2));
-     alert("entered username: "+ u +"entered password :" + p);
 
       // bad login → show error and stop
       err.textContent = 'Invalid username or password';
