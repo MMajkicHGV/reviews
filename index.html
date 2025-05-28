@@ -2004,8 +2004,8 @@ let isValid = false;
 
 for (const user of users) {
   // Debug‐help: log what you’re comparing
-  console.log('checking', user.username, user.password);
-  alert('Username:|'+ user.username + "| Password: |" + user.password + "| vs entered Username : |" + u + "| and password : |"+ p +"|");
+
+
 
   if (user.username == u && user.password == p) {
     isValid = true;
@@ -2014,7 +2014,6 @@ for (const user of users) {
 }
 
     if (!isValid) {
-    alert(JSON.stringify(users, null, 2));
 
       // bad login → show error and stop
       err.textContent = 'Invalid username or password';
