@@ -1997,9 +1997,14 @@ async function loadUsers() {
     const err = document.getElementById('login-error');
     err.textContent = '';  // clear old errors
 
-    const me = users.find(x => x.username === u && x.password === p);
+      const isValid = users.some(user =>
+  user.username === u &&
+  user.password === p
+);
 
-    if (!me) {
+    if (!isValid) {
+    alert(JSON.stringify(users, null, 2));
+
       // bad login → show error and stop
       err.textContent = 'Invalid username or password';
       return;
