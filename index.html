@@ -9,7 +9,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link rel="icon" type="image/png" sizes="25x25" href="logoBlack.png" />
+<link
+  href="https://fonts.googleapis.com/css2?family=Rock+Salt&display=swap"
+  rel="stylesheet"
+/>
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
@@ -19,17 +23,44 @@
     .container { max-width:1100px; margin:auto; background:#1a1a1a; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.6); padding:24px; }
 
     /* header */
-    .brand-row { position: relative; display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+    .brand-row { position: relative; display:flex; align-items:center; justify-content:space-between; margin-bottom:50px; }
     .brand-row .logo { height:50px; }
     .brand-row .vegas-logo { position:absolute; left:50%; transform:translateX(-50%); height:150px; }
     .brand-row .top-right { display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
-    .brand-row .top1-name { font-size:30px; font-weight:700; color:#fff; }
+    .brand-row .top1-name { font-size:30px; font-weight:700; color:#fff; margin-top: 30px;}
     .brand-row .top1-avatar { width:92px; height:92px; border-radius:50%; overflow:hidden; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,0.7); }
 
 
-    .header-row { margin-bottom:16px; }
-    .header-row h1 { margin:0; font-size:1.5rem; font-weight:400; text-align:center; }
-    #current-month { text-transform:uppercase; font-weight:700; }
+.header-row {
+  position: relative;       /* establish a positioning context */
+  height: 4rem;             /* or whatever bit of vertical space you want */
+  margin-bottom: 30px;      /* your existing spacing */
+}
+
+
+.header-row h1 {
+  display: inline-flex;       /* → make the h1 an inline flex container */
+  align-items: center;        /* → vertically centre all children */
+  justify-content: center;    /* → keep the group centred in its parent */
+  gap: 1.2rem;                /* → space between switcher, month and “, scoreboard” */
+  font-size: 1.5rem;          /* (or whatever you already had) */
+  margin: 0;                  /* remove extra margins */
+}
+    
+    
+    
+    
+    
+#current-month {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: 25px;           /* your existing size */
+  font-weight: 700;          /* your existing weight */
+  text-transform: uppercase; /* your existing transform */
+  margin: 0;                 /* reset any stray margins */
+}
 
     .tools { position:sticky; top:0; background:#1a1a1a; padding:12px 0; display:flex; justify-content:space-between; align-items:center; z-index:10; margin-bottom:24px; }
     .months { display:flex; gap:8px; flex-wrap:wrap; }
@@ -55,6 +86,11 @@
     }
 
 .print-btn:hover
+   {
+   	transform:scale(2);
+    }
+    
+.detail-print-btn:hover
    {
    	transform:scale(2);
     }
@@ -122,11 +158,13 @@ table thead th{
     .details-header h3 { margin:0; }
     .detail-print-btn {
       position:absolute; top:0; right:0;
-      background:linear-gradient(135deg,#4a90e2,#9013fe);
+      background: #5f5f73;
       border:none; color:#fff; padding:6px 12px; border-radius:6px;
       cursor:pointer; transition:0.2s;
+      margin-right: 15px;
     }
     .detail-print-btn:hover { opacity:0.9; }
+    
     
 
 /* your wrapper that actually pushes/pulls the rows */
@@ -191,7 +229,6 @@ visibility: visible;
     #close-compare:hover { color:#fff; }
 
 
-
 /* 1) GRID FOR THE THREE COLUMNS */
 #compare-rows{
   display:grid;
@@ -246,8 +283,14 @@ visibility: visible;
 }
 /* make the right-hand bar grow from the right edge */
 .cmp-cell.right .cmp-bar .fill{
-  left:auto;               /* cancel the default “left:0” */
-  right:0;
+  left:0;               /* cancel the default “left:0” */
+  right:auto;
+}
+
+/* make the right-hand bar grow from the right edge */
+.cmp-cell.left .cmp-bar .fill{
+  left: auto !important;
+  right: 0     !important;
 }
 
 /* anchor the number to the bar-end and flip its translate */
@@ -422,6 +465,11 @@ visibility: visible;
   height: 100%;
   background: currentColor;  /* picks up winner/loser color */
   transition: width 0.4s ease;
+    position: absolute;
+  top:    0;
+  bottom: 0;
+  left:   0;    /* default: grow from left edge */
+  width:  auto; /* will be set via inline style="width:NN%" */
 }
 
 .cmp-value {
@@ -500,8 +548,8 @@ font-size:150%;
 }
 
 /* left & right names hug their respective sides */
-#cmp-left  { justify-self:start; }
-#cmp-right { justify-self:end;   }
+#cmp-left  { justify-self:end; margin-right: 70px;}
+#cmp-right { justify-self:start;   margin-left: 70px;}
 
 /* keep the names on one line */
 .cmp-name-big{
@@ -518,6 +566,81 @@ font-size:150%;
 
 /* the grid of bars must now start *flush* under the header */
 #compare-rows{ margin-top:0; }
+
+
+
+
+
+.text-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: 'Rock Salt', cursive;
+  color: inherit;      /* same color */
+  line-height: inherit;
+  cursor: pointer;
+  margin-right: 20px;
+  font-size: 1.8rem;
+  overflow: visible;
+  position: relative;
+  
+}
+.text-button::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;                 /* tweak vertical gap to taste */
+  left: 40%;
+  width: 0;
+  height: 2px;                  /* underline thickness */
+  background: #ffffffaa;        /* semi-opaque white */
+  transition: width 0.3s ease, left 0.3s ease;
+  box-shadow:
+    0  2px 6px rgba(0,0,0,0.8),   /* below */
+}
+
+
+.text-button:hover::after {
+  left: 0;
+  width: 100%;
+
+}
+
+.text-button:hover{
+  color: #efd9fa;
+}
+
+
+.site-switcher {
+  position: absolute;
+  top: 50%;
+  left: 51%;
+  transform: translate(-50%, -51%);
+}
+
+/* hidden by default */
+.site-switcher-item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* when open → slide one up, one down */
+.site-switcher.open .site-switcher-item:nth-of-type(2) {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-12.5rem);
+}
+.site-switcher.open .site-switcher-item:nth-of-type(3) {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(12.5rem);
+}
+
+
 
         /* optional -- center text on narrow screens */
 @media(max-width:600px){
@@ -537,26 +660,12 @@ font-size:150%;
 <body>
 
 
-<div id="login-wrapper" style="display:flex; align-items:center; justify-content:center; height:100vh;">
-  <form class="login-form" id="login-form">
-    <div class="flex-row">
-      <label class="lf--label" for="username">👤</label>
-      <input id="login-username" class='lf--input' placeholder='Username' type='text'>
-    </div>
-    <div class="flex-row">
-      <label class="lf--label" for="password">🔒</label>
-      <input id="login-password" class='lf--input' placeholder='Password' type='password'>
-    </div>
-    <button type="submit" class="lf--submit" id="loginButton">LOGIN</button>
-    <p id="login-error" style="color:red; font-size:0.8em;"></p>
-  </form>
-</div>
 
 
 
 
 
-  <div class="container" id="scoreboard-container" style="display:none;">
+  <div class="container" id="scoreboard-container" >
     <div class="brand-row">
       <img src="logo.png" class="logo" alt="Hilton Logo">
       <img src="vegas.png" class="vegas-logo" alt="Vegas Logo">
@@ -565,9 +674,17 @@ font-size:150%;
       </div>
     </div>
 
-    <div class="header-row">
-      <h1>Elara, <span id="current-month">MAY</span>, scoreboard</h1>
-    </div>
+<div class="header-row">
+  <!-- 1) your site-switcher -->
+  <span class="site-switcher">
+    <button class="text-button active" id="site-btn-main">Elara</button>
+    <button class="text-button site-switcher-item">LVB</button>
+    <button class="text-button site-switcher-item">Cancun</button>
+  </span>
+
+  <!-- 2) your month -->
+  <span id="current-month">MAY</span>
+</div>
 
     <div class="tools">
       <div class="months" id="months-container"></div>
@@ -577,7 +694,7 @@ font-size:150%;
     <table>
       <thead>
         <tr>
-          <th>HGV Elara QA</th>
+          <th>HGV QA</th>
           <th data-key="overall">Score</th>
           <th data-key="accuracy">Accuracy %</th>
           <th data-key="rescission">Rescission %</th>
@@ -617,76 +734,46 @@ font-size:150%;
     let howManyCompareSelected = 0;
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     let currentMonth = "May";
+    let siteSelected = "Elara";
     const scoreboardData = {}, sortConfig = { column:'overall', direction:'desc' }, compareSelection = new Set();
 
-      
-      
+    const fullMonthNames = {
+  Jan: "January",
+  Feb: "February",
+  Mar: "March",
+  Apr: "April",
+  May: "May",
+  Jun: "June",
+  Jul: "July",
+  Aug: "August",
+  Sep: "September",
+  Oct: "October",
+  Nov: "November",
+  Dec: "December",
+};
+  
+function loadSiteFile(site) {
+  // 1) clear out old data
+  for (let month of months) {
+    delete scoreboardData[month];
+  }
+  // 2) re-parse the new file
+  fetch(site + '.xlsx')
+    .then(r => {
+      if (!r.ok) throw new Error(`Couldn't load ${site}.xlsx`);
+      return r.arrayBuffer();
+    })
+    .then(parseWorkbook)
+    .catch(err => console.error(err));
+}      
       
   
 document.addEventListener("DOMContentLoaded", () => {
-  const form    = document.getElementById("login-form");
-  const err     = document.getElementById("login-error");
-  const wrapper = document.getElementById("login-wrapper");
-  const board   = document.getElementById("scoreboard-container");
-
-  const loginButton = document.getElementById("loginButton");
-loginButton.addEventListener("click", e => {
-  e.preventDefault();
-
-  // 1) grab the values the user typed
-  const enteredUser = document
-    .getElementById("login-username")
-    .value
-    .trim()
-    .toLowerCase();
-  const enteredPass = document
-    .getElementById("login-password")
-    .value
-    .trim();
-
-  // 2) fetch & parse the workbook
-  fetch("Users.xlsx")
-    .then(resp => {
-      if (!resp.ok) throw new Error(`HTTP ${resp.status} fetching Users.xlsx`);
-      return resp.arrayBuffer();
-    })
-    .then(buffer => {
-      const wb    = XLSX.read(buffer, { type: "array" });
-      const sheet = wb.Sheets["Users"];
-      const rows  = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-      // 3) normalize & look for a match
-      const users = rows.map(u => ({
-        username: (u.Username || u.username || "")
-                    .toLowerCase().trim(),
-        password: (u.Password || u.password || "").trim(),
-        display:  u.User     || u.user     || ""
-      }));
-
-      const match = users.find(u =>
-        u.username === enteredUser &&
-        u.password === enteredPass
-      );
-
-      // 4) success or failure
-      if (match) {
-        // hide login, show the rest of your app
-        document.getElementById("login-wrapper").style.display     = "none";
-        document.getElementById("scoreboard-container").style.display = "block";
-
-        // now kick off your normal UI/data load
-        initUI();
-        attemptFetchExcel();
-      } else {
-        document.getElementById("login-error").textContent =
-          "Invalid username or password.";
-      }
-    })
-    .catch(err => {
-      console.error("Login system error:", err);
-      document.getElementById("login-error").textContent =
-        "⚠️ Could not load login data. Please try again later.";
-    });
+  
+      initUI();
+      attemptFetchExcel();
+     loadSiteFile(siteSelected);
+    
 });
       
 
@@ -788,7 +875,7 @@ loginButton.addEventListener("click", e => {
       document.querySelectorAll(".month-btn.active").forEach(x=>x.classList.remove("active"));
       btn?.classList.add("active");
       currentMonth=mon;
-      document.getElementById("current-month").textContent=mon.toUpperCase();
+      document.getElementById("current-month").textContent = fullMonthNames[mon].toUpperCase();
       renderTable(mon);
       updateTopOverall(mon);
       document.getElementById("compare-container").style.display='none';
@@ -1184,7 +1271,7 @@ function showComparison() {
   const d1      = rows.find(r=>r.name===n1);
   const d2      = rows.find(r=>r.name===n2);
 
-  const labels     = ['Overall','Accuracy','Rescission','Transactions','Open Issues'];
+  const labels     = ['Overall','Accuracy %','Rescission %','Transactions','Open Issues'];
   const keys       = ['overall','accuracy','rescission','transactions','issues'];
   const highBetter = new Set(['Overall','Accuracy','Transactions']);
 
@@ -1199,7 +1286,15 @@ function showComparison() {
     const p2Win = v1===v2 || (highBetter.has(lab)? v2>v1 : v2<v1);
     let pct1, pct2;
 
-if (lab === 'Accuracy' || lab === 'Rescission') {
+
+if (lab === 'Accuracy %' || lab === 'Rescission %') {
+  // pick the right target field (issuesTarget for "issues", otherwise key+"Target")
+  let t1 = ((key === 'issues')
+             ? d1.issuesTarget
+             : d1[key + 'Target']) || 1;
+  let t2 = ((key === 'issues')
+             ? d2.issuesTarget
+             : d2[key + 'Target']) || 1;
   // out of 100
   pct1 = Math.round(v1);
   pct2 = Math.round(v2);
@@ -1209,16 +1304,22 @@ if (lab === 'Accuracy' || lab === 'Rescission') {
   const t2 = d2.transactionsTarget || 1;
   pct1 = Math.round(v1 / t1 * 100);
   pct2 = Math.round(v2 / t2 * 100);
-} else {
-  // for Overall & Open Issues, scale against the larger of the two
-  const max = Math.max(v1, v2, 1);
-  pct1 = Math.round(v1 / max * 100);
-  pct2 = Math.round(v2 / max * 100);
-}
+} else if (lab === 'Overall') {
+    // full bar if you met or exceeded your ScoreTarget, otherwise value/target
+    pct1 = v1 >= t1 ? 100 : Math.round(v1 / t1 * 100);
+    pct2 = v2 >= t2 ? 100 : Math.round(v2 / t2 * 100);
+
+  } else if (lab === 'Open Issues') {
+    // **fewer** issues than target → percent; **otherwise** full bar
+    pct1 = v1 <  t1 ? Math.round(v1 / t1 * 100) : 100;
+    pct2 = v2 <  t2 ? Math.round(v2 / t2 * 100) : 100;
+  }
 
 // clamp between 0–100
 pct1 = Math.min(100, Math.max(0, pct1));
 pct2 = Math.min(100, Math.max(0, pct2));
+
+
 
     // rank calculation
     const sorted = rows.slice().sort((a,b) =>
@@ -1742,6 +1843,50 @@ window.addEventListener('DOMContentLoaded', () => {
   
   
 });
+
+
+const switcher = document.querySelector('.site-switcher');
+    const mainBtn  = switcher.querySelector('#site-btn-main');
+    const items    = switcher.querySelectorAll('.site-switcher-item');
+
+    // toggle open/closed when you click the active button
+    mainBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      switcher.classList.toggle('open');
+    });
+
+    // if you click one of the other two, swap it with the main and collapse
+items.forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+
+    // 1) swap the labels
+    const old = mainBtn.textContent.trim();
+    const next = btn.textContent.trim();
+    mainBtn.textContent = next;
+    btn.textContent     = old;
+
+    // 2) toggle “active” classes
+    items.forEach(x => x.classList.remove('active'));
+    btn.classList.add('active');
+    mainBtn.id = 'site-btn-main';
+    btn.id     = '';      // old mainBtn loses its ID
+
+    // 3) close the fly-out
+    switcher.classList.remove('open');
+
+    // 4) if it’s a new site → clear & re-load
+    if (next !== siteSelected) {
+      siteSelected = next;
+      loadSiteFile(siteSelected);
+    }
+  });
+});
+
+
+    
+    
+
     
   </script>
 </body>
