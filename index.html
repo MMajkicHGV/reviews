@@ -1990,30 +1990,29 @@ async function loadUsers() {
   (async function bootstrap() {
     const users = await loadUsers();
 
-    document.getElementById('login-form')
-            .addEventListener('submit', ev => {
-      ev.preventDefault();
-      const u   = document.getElementById('login-user').value.trim().toLowerCase();
-      const p   = document.getElementById('login-pass').value.trim();
-      const err = document.getElementById('login-error');
-      err.textContent = '';  // clear any previous message
+   document.getElementById('login-form').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const u   = document.getElementById('login-user').value.trim().toLowerCase();
+    const p   = document.getElementById('login-pass').value.trim();
+    const err = document.getElementById('login-error');
+    err.textContent = '';  // clear old errors
 
-      const me = users.find(x => x.username === u && x.password === p);
-      if (!me) {
-      	alert(JSON.stringify(users, null, 2));
-        err.textContent = 'Invalid username or password';
-        return;
-      }
+    const me = users.find(x => x.username === u && x.password === p);
 
-      // success: remove blur + overlay
-      document.getElementById('scoreboard-container')
-              .classList.remove('blurred');
-      const ov = document.getElementById('login-overlay');
-      ov.style.transition = 'opacity .5s';
-      ov.style.opacity    = 0;
-      ov.addEventListener('transitionend', () => ov.remove());
-    });
-  })();
+    if (!me) {
+      // bad login → show error and stop
+      err.textContent = 'Invalid username or password';
+      return;
+    }
+
+    // good login → tear down overlay
+    document.getElementById('scoreboard-container')
+            .classList.remove('blurred');
+    const ov = document.getElementById('login-overlay');
+    ov.style.transition = 'opacity .5s ease';
+    ov.style.opacity    = 0;
+    ov.addEventListener('transitionend', () => ov.remove());
+  });
 
     
   </script>
