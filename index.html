@@ -2007,7 +2007,7 @@ for (const user of users) {
   console.log('checking', user.username, user.password);
   alert('checking'+ user.username + "| Password: " + user.password + "|");
 
-  if (user.username === u && user.password === p) {
+  if (user.username == u && user.password == p) {
     isValid = true;
     break;    // stop as soon as you find a match
   }
