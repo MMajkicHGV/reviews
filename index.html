@@ -24,7 +24,7 @@
 
     /* header */
     .brand-row { position: relative; display:flex; align-items:center; justify-content:space-between; margin-bottom:50px; }
-    .brand-row .logo { height:50px; }
+    .brand-row .logo { height:50px; margin-top: 30px;}
     .brand-row .vegas-logo { position:absolute; left:50%; transform:translateX(-50%); height:150px; }
     .brand-row .top-right { display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
     .brand-row .top1-name { font-size:30px; font-weight:700; color:#fff; margin-top: 30px;}
@@ -769,10 +769,8 @@ function loadSiteFile(site) {
       
   
 document.addEventListener("DOMContentLoaded", () => {
-  
+      loadSiteFile(siteSelected);
       initUI();
-     loadSiteFile(siteSelected);
-    
 });
       
 
@@ -1377,7 +1375,7 @@ function downloadReport() {
 
   // ——— 1) Title + FULL MONTH of YEAR ———
   doc.setFont("Playfair Display","bold").setFontSize(28);
-  doc.text("Elara at Hilton Grand Vacations", margin, y);
+  doc.text(`${siteSelected} at Hilton Grand Vacations`, margin, y);
 
   // 1) define full month and column names:
 const fullMonthNames = {
@@ -1551,7 +1549,7 @@ function printEmployee(r) {
   // ——— Header ———
   doc.setFont("Playfair Display","bold").setFontSize(28);
   y += 10;
-  doc.text("Elara at Hilton Grand Vacations", margin, y);
+  doc.text(`${siteSelected} at Hilton Grand Vacations`, margin, y);
   y += 40;
 
 // 1) Build the two pieces of text
