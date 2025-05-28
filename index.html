@@ -771,7 +771,6 @@ function loadSiteFile(site) {
 document.addEventListener("DOMContentLoaded", () => {
   
       initUI();
-      attemptFetchExcel();
      loadSiteFile(siteSelected);
     
 });
@@ -819,19 +818,6 @@ document.addEventListener("DOMContentLoaded", () => {
       
     }
 
-    function attemptFetchExcel(){
-      fetch("Elara.xlsx")
-        .then(r=>r.ok? r.arrayBuffer(): Promise.reject())
-        .then(parseWorkbook)
-        .catch(_=>{
-          const sr=(_spPageContextInfo&&_spPageContextInfo.webServerRelativeUrl)||"";
-          const url=`${window.location.origin}${sr}/_api/web/getfilebyserverrelativeurl('${sr}/SiteAssets/Elara.xlsx')/$value`;
-          fetch(url,{credentials:'same-origin'})
-            .then(r=>r.ok? r.arrayBuffer(): Promise.reject())
-            .then(parseWorkbook)
-            .catch(err=>console.error("Excel load failed",err));
-        });
-    }
 
     function parseWorkbook(ab){
       const wb=XLSX.read(ab,{type:"array"});
