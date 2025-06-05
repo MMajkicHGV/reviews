@@ -977,7 +977,7 @@ th.header-actions {
 }
 
 
-#header-row.blurred {
+#protection.blurred {
   filter: blur(6px);
   transition: filter .3s ease;
 }
@@ -1064,7 +1064,8 @@ th.header-actions {
   box-shadow: 0 4px 16px rgba(0,0,0,0.7);
 }
 
-#header-row.blurred {
+
+#protection.blurred {
   filter: blur(6px);
   transition: filter .3s ease;
 }
@@ -1117,8 +1118,8 @@ th.header-actions {
   </div>
 
  <!-- <div class="container blurred" id="scoreboard-container"> -->
-
-  <div class="container blurred" id="scoreboard-container" >
+ <div class="blurred" id="protection">
+  <div class="container" id="scoreboard-container" >
     <div class="brand-row">
       <img src="logo.png" class="logo" alt="Hilton Logo">
       <img src="vegas.png" class="vegas-logo" alt="Vegas Logo">
@@ -1127,7 +1128,7 @@ th.header-actions {
       </div>
     </div>
 
-<div class="header-row blurred" id="header-row">
+<div class="header-row" id="header-row">
   <!-- 1) your site-switcher -->
   <span class="site-switcher">
     <button class="text-button active" id="site-btn-main">Elara</button>
@@ -1222,7 +1223,7 @@ th.header-actions {
 
 
   </div>
-  
+  </div>
   
   
  <!--</div>-->
@@ -1295,8 +1296,8 @@ function loadSiteFile(site) {
   
 document.addEventListener("DOMContentLoaded", () => {
   // Wait for users[] to be populated
-  const header = document.getElementById("header-row");
-  header.classList.add('blurred');
+  const protection = document.getElementById("protection");
+  protection.classList.add('blurred');
   loadUsers().then(() => {
     const loginForm = document.getElementById("login-form");
     loginForm.addEventListener("submit", ev => {
@@ -1309,7 +1310,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       // Successful login—apply access and un-blur
-      header.classList.remove('blurred');
+      protection.classList.remove('blurred');
       applyAccessFilter(match.access);
       document.getElementById("login-error").textContent = "";
     });
