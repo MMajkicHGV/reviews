@@ -1265,7 +1265,23 @@ function loadSiteFile(site) {
       
   
 document.addEventListener("DOMContentLoaded", () => {
-  loadUsers();  
+  // Wait for users[] to be populated
+  loadUsers().then(() => {
+    const loginForm = document.getElementById("login-form");
+    loginForm.addEventListener("submit", ev => {
+      ev.preventDefault();
+      const uname = document.getElementById("login-user").value.trim().toLowerCase();
+      const pass  = document.getElementById("login-pass").value;
+      const match = users.find(u => u.username === uname && u.password === pass);
+      if (!match) {
+        document.getElementById("login-error").textContent = "Invalid credentials.";
+        return;
+      }
+      // Successful login—apply access and un-blur
+      applyAccessFilter(match.access);
+      document.getElementById("login-error").textContent = "";
+    });
+  });
 });
       
 
@@ -2462,9 +2478,8 @@ items.forEach(btn => {
 
 
 // — 1) load and parse Users.xlsx
-
 function loadUsers() {
-  fetch('Users.xlsx')
+  return fetch('Users.xlsx')
     .then(r => {
       if (!r.ok) throw new Error('Could not fetch Users.xlsx');
       return r.arrayBuffer();
@@ -2477,7 +2492,7 @@ function loadUsers() {
         fullname: String(r.User     || '').trim(),
         username: String(r.Username || '').trim().toLowerCase(),
         password: String(r.Password || '').trim(),
-        access:   String(r.Access   || '')  // comma-separated
+        access:   String(r.Access   || '')
                      .split(',')
                      .map(s=>s.trim().toLowerCase())
                      .filter(Boolean)
