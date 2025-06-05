@@ -976,6 +976,12 @@ th.header-actions {
   transform: scale(1.2);
 }
 
+
+body.blurred {
+  filter: blur(6px);
+  transition: filter .3s ease;
+}
+
 /* ====================== RESPONSIVE ADJUSTMENTS ====================== */
 @media(max-width: 800px) {
   #edit-modal {
@@ -1254,18 +1260,43 @@ function loadSiteFile(site) {
     delete scoreboardData[month];
   }
   // 2) re-parse the new file
-  fetch(site.charAt(0).toUpperCase() + site.slice(1) + '.xlsx')
+  // Build the “capitalized first‐letter” URL:
+  const url1 = site.charAt(0).toUpperCase() + site.slice(1) + ".xlsx";
+
+  // Build the “all uppercase” URL:
+  const url2 = site.toUpperCase() + site.slice(1) + ".xlsx";
+
+  // Attempt the first fetch:
+  fetch(url1)
     .then(r => {
-      if (!r.ok) throw new Error(`Couldn't load ${site}.xlsx`);
+      if (!r.ok) {
+        // Force a rejection so we go into .catch(...)
+        throw new Error(`Couldn't load ${url1}`);
+      }
       return r.arrayBuffer();
     })
     .then(parseWorkbook)
-    .catch(err => console.error(err));
+    .catch(err1 => {
+      console.warn(`First fetch failed (${url1}):`, err1);
+      // Now try the second URL:
+      return fetch(url2)
+        .then(r2 => {
+          if (!r2.ok) {
+            throw new Error(`Couldn't load ${url2}`);
+          }
+          return r2.arrayBuffer();
+        })
+        .then(parseWorkbook)
+        .catch(err2 => {
+          console.error(`Second fetch also failed (${url2}):`, err2);
+        });
+    });
 }      
       
   
 document.addEventListener("DOMContentLoaded", () => {
   // Wait for users[] to be populated
+  document.body.classList.add('blurred');
   loadUsers().then(() => {
     const loginForm = document.getElementById("login-form");
     loginForm.addEventListener("submit", ev => {
@@ -1278,6 +1309,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       // Successful login—apply access and un-blur
+      document.body.classList.remove('blurred');
       applyAccessFilter(match.access);
       document.getElementById("login-error").textContent = "";
     });
