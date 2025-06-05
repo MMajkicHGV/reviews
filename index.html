@@ -2503,7 +2503,7 @@ function loadUsers() {
 
 
 
-function applyAccessFilter(accessList) {
+unction applyAccessFilter(accessList) {
   // 1) Grab the “main” button (this should always exist in your HTML)
   const mainBtn = document.getElementById("site-btn-main");
   if (!mainBtn) {
@@ -2511,46 +2511,47 @@ function applyAccessFilter(accessList) {
     return;
   }
 
-  // Normalize its label to lowercase so we can compare
-  const currentLabel = mainBtn.textContent.trim().toLowerCase();
+  // Normalize the current main button’s label
+  let currentLabel = mainBtn.textContent.trim().toLowerCase();
 
-  // 2) If the main button’s label is NOT in accessList, rename it:
+  // 2) If the main button’s label is NOT in accessList, rename it to the first allowed site:
   if (!accessList.includes(currentLabel)) {
-    // If the user does have at least one site, overwrite the mainBtn’s text
     if (accessList.length > 0) {
       const newSite = accessList[0]; 
-      // Capitalize first letter (optional – just for display)
-      mainBtn.textContent = newSite.charAt(0).toUpperCase() + newSite.slice(1);
-      // Make sure it’s styled as “active”
+      // Capitalize first letter just for display:
+      const displayName = newSite.charAt(0).toUpperCase() + newSite.slice(1);
+      mainBtn.textContent = displayName;
       mainBtn.classList.add("active");
+      currentLabel = newSite; // update our variable to match the newly-set main site
     } else {
-      // If user has no sites in accessList, you could hide everything or show an error.
-      // For now we’ll just blank‐out the button:
+      // User has no sites—blank it out or show a message:
       mainBtn.textContent = "No Site";
       return;
     }
   }
 
-  // 3) Now remove ONLY the fly-out items that are not in accessList.
-  document
-    .querySelectorAll(".site-switcher-item")
-    .forEach(btn => {
-      const name = btn.textContent.trim().toLowerCase();
-      if (!accessList.includes(name)) {
-        btn.remove();
-      }
-    });
-    // ──────────────────────────────────────────
+  // 3) Remove any dropdown items that are either:
+  //    a) Not in the user’s accessList, OR
+  //    b) Exactly the same as the main site’s label
+  document.querySelectorAll(".site-switcher-item").forEach(btn => {
+    const name = btn.textContent.trim().toLowerCase();
+    if (!accessList.includes(name) || name === currentLabel) {
+      btn.remove();
+    }
+  });
 
-    // 4) Un-blur the scoreboard and fade out the overlay
-    document.getElementById("scoreboard-container").classList.remove("blurred");
-    const overlay = document.getElementById("login-overlay");
-    overlay.style.transition = "opacity 0.5s ease";
-    overlay.style.opacity    = "0";
-    overlay.addEventListener("transitionend", () => overlay.remove());
-    initUI(); 
-    loadSiteFile(siteSelected);
-  }
+  // 4) Un-blur the scoreboard, fade out the overlay, initialize UI, and load the chosen site’s data:
+  document.getElementById("scoreboard-container").classList.remove("blurred");
+  const overlay = document.getElementById("login-overlay");
+  overlay.style.transition = "opacity 0.5s ease";
+  overlay.style.opacity    = "0";
+  overlay.addEventListener("transitionend", () => overlay.remove());
+
+  initUI();
+  // siteSelected should already match `currentLabel`
+  // (if you need to force it, do: siteSelected = currentLabel)
+  loadSiteFile(currentLabel);
+}
 
 /* -------------------------------------------
    Place this snippet right after:
