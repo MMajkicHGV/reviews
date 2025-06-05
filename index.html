@@ -1232,7 +1232,6 @@ th.header-actions {
     let currentMonth = "May";
     let siteSelected = "Elara";
     const scoreboardData = {}, sortConfig = { column:'overall', direction:'desc' }, compareSelection = new Set();
-    const newMainBtn = document.getElementById('site-btn-main');
 
 
     const fullMonthNames = {
@@ -2490,58 +2489,43 @@ function loadUsers() {
 
 
 
-// 1) Utility to show/hide buttons based on access:
-  function applyAccessFilter(accessList) {
-    const mainBtn = document.getElementById("site-btn-main");
-    const items   = Array.from(document.querySelectorAll(".site-switcher-item"));
-    const allBtns = [ mainBtn, ...items ];
-    allBtns.forEach(btn => {
-      if (btn) {
-        const name = btn.textContent.trim().toLowerCase();
-        if (!accessList.includes(name)) {
-          btn.remove();
-        }
-      }
-    });
-    // If we removed #site-btn-main itself, pick the first leftover button:
-    if (!document.getElementById("site-btn-main")) {
-      const leftover = document.querySelector(".site-switcher button");
-      if (leftover) {
-        leftover.id = "site-btn-main";
-        leftover.classList.add("active");
-      }
+function applyAccessFilter(accessList) {
+  // 1) Grab the “main” button (this should always exist in your HTML)
+  const mainBtn = document.getElementById("site-btn-main");
+  if (!mainBtn) {
+    console.error("⚠️ applyAccessFilter(): no #site-btn-main found.");
+    return;
+  }
+
+  // Normalize its label to lowercase so we can compare
+  const currentLabel = mainBtn.textContent.trim().toLowerCase();
+
+  // 2) If the main button’s label is NOT in accessList, rename it:
+  if (!accessList.includes(currentLabel)) {
+    // If the user does have at least one site, overwrite the mainBtn’s text
+    if (accessList.length > 0) {
+      const newSite = accessList[0]; 
+      // Capitalize first letter (optional – just for display)
+      mainBtn.textContent = newSite.charAt(0).toUpperCase() + newSite.slice(1);
+      // Make sure it’s styled as “active”
+      mainBtn.classList.add("active");
+    } else {
+      // If user has no sites in accessList, you could hide everything or show an error.
+      // For now we’ll just blank‐out the button:
+      mainBtn.textContent = "No Site";
+      return;
     }
   }
 
-  // 2) Assume loadUsers() is already defined and has populated `users[]`.
-
-  // ─── Replace your old login-form listener with exactly this: ───
-  document.getElementById("login-form").addEventListener("submit", ev => {
-    ev.preventDefault(); // prevent full-page reload
-
-    const errBox        = document.getElementById("login-error");
-    const usernameInput = document.getElementById("login-user").value.trim().toLowerCase();
-    const passwordInput = document.getElementById("login-pass").value;
-
-    // 1) Look up the user in the `users` array:
-    const matchedUser = users.find(u => u.username === usernameInput);
-    if (!matchedUser || matchedUser.password !== passwordInput) {
-      errBox.textContent = "Invalid username or password.";
-      return;
-    }
-
-    // 2) Filter out any sites the user does not have access to:
-    applyAccessFilter(matchedUser.access);
-
-    // ──────────────────────────────────────────
-    // 3) NOW that any unauthorized buttons have been removed, grab the “site” button:
-    const newMainBtn = document.getElementById("site-btn-main");
-    if (newMainBtn) {
-      siteSelected = newMainBtn.textContent.trim();
-      loadSiteFile(siteSelected);
-    } else {
-      console.error("❗ No #site-btn-main found after applyAccessFilter");
-    }
+  // 3) Now remove ONLY the fly-out items that are not in accessList.
+  document
+    .querySelectorAll(".site-switcher-item")
+    .forEach(btn => {
+      const name = btn.textContent.trim().toLowerCase();
+      if (!accessList.includes(name)) {
+        btn.remove();
+      }
+    });
     // ──────────────────────────────────────────
 
     // 4) Un-blur the scoreboard and fade out the overlay
