@@ -87,16 +87,20 @@
 
 .print-btn:hover
    {
-   	transform:scale(2);
+   	transform:scale(1.5);
     }
     
 .detail-print-btn:hover
    {
-   	transform:scale(2);
+   	transform:scale(1.5);
     }
+    
+   
+    
 
     table { width:100%; border-collapse:collapse; margin-bottom:24px; }
     thead th { background:#272727; padding:12px; text-align:left; }
+    
     th[data-key] { cursor:pointer; }
     th, td { padding:12px; border-bottom:1px solid #333; }
     tbody tr { transition:background 0.2s; cursor:pointer; }
@@ -111,6 +115,11 @@ table tbody td:nth-child(4),
 table tbody td:nth-child(5),
 table tbody td:nth-child(6) {
   text-align: center;
+}
+
+table tbody td:nth-child(7) {
+  text-align: right;
+  padding-right: 12px; /* a little breathing room so the button isn’t jammed against the border */
 }
 
 
@@ -193,11 +202,22 @@ table thead th{
 }
 
 .notes-detail-container.open {
-visibility: visible;
-  /* only when open do we get that 12px gap and padding */
+  /* keep the exact same styles you have now… */
+  visibility: visible;
   margin-top: 12px;
   padding: 12px;
   min-height: 150px;
+
+  /* new: show a blinking text cursor */
+  outline: none;          /* remove default focus outline */
+  white-space: pre-wrap; /* so line breaks behave like a textarea */
+  overflow-wrap: break-word;
+  cursor: text;
+}
+
+/* when the user clicks in that div, show a caret */
+.notes-detail-container[contenteditable="true"]:focus {
+  border-color: var(--toggle-border-color, #4a90e2);
 }
 
 /* give each toggle button a custom property for its “highlight” colour */
@@ -640,6 +660,342 @@ font-size:150%;
   transform: translateX(12.5rem);
 }
 
+
+
+/* ====================== EDIT BUTTON (matches other toolbar buttons) ====================== */
+#edit-btn {
+  background: #272727;
+  color: #ccc;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 18px 25px;
+  display: inline;
+  align-items: center;
+  transition: 0.2s;
+}
+#edit-btn:hover, #edit-btn:focus {
+  background: #333;
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.8);
+  outline: none;
+  transform: scale(1.5);
+}
+
+/* ====================== MODAL OVERLAY ====================== */
+#edit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.75);
+  display: none;              /* hidden by default */
+  align-items: center;        /* center modal horizontally */
+  justify-content: center;    /* center modal vertically */
+  z-index: 1000;              /* above everything else */
+}
+
+/* ====================== MODAL CONTAINER ====================== */
+#edit-modal {
+  background: #1a1a1a;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 1000px;
+  max-height: 90%;
+  overflow: auto;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.7);
+  padding: 24px;
+  position: relative;
+}
+
+/* Modal Header with Title and Close button */
+#edit-modal header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 56px;
+}
+#edit-modal header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  color: #fff;
+  margin: 0;
+}
+#edit-modal header button.close-edit {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.2s, transform 0.1s;
+}
+#edit-modal header button.close-edit:hover {
+  color: #fff;
+  transform: scale(1.2);
+}
+
+/* ====================== EDITABLE TABLE STYLES ====================== */
+#edit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+
+/* Table Header Row */
+#edit-table thead th {
+  background: #272727;
+  color: #fff;
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #333;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-weight: 600;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+/* Table Body Rows */
+#edit-table tbody tr {
+  transition: background 0.2s;
+}
+#edit-table tbody tr:hover {
+  background: #2a2a2a;
+}
+
+/* Table Cells */
+#edit-table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #333;
+}
+
+/* The first column (user’s name) */
+#edit-table tbody td.name-cell {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+  width: 25%;
+  transition: font-size 0.15s, color 0.15s;
+}
+
+/* Editable value cells: input fields */
+#edit-table tbody td input {
+  width: 100%;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #eee;
+  font-size: 1rem;
+  padding: 6px 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+/* On focus or hover, make the border color accent gradient (blue → purple) */
+#edit-table tbody td input:focus,
+#edit-table tbody td input:hover {
+  border-color: #4a90e2;
+  box-shadow: 0 0 6px rgba(74,144,226,0.4);
+  outline: none;
+}
+
+/* Larger font when hovering over a cell */
+#edit-table tbody td:hover ~ td.name-cell,
+#edit-table tbody td.name-cell:hover {
+  font-size: 1.2rem;  /* enlarge user’s name */
+  color: #4a90e2;
+}
+/* And when hovering, also enlarge the column header */
+#edit-table tbody td:hover {
+  cursor: text;
+}
+#edit-table tbody td:hover {
+  /* find the index of this cell’s column and match <thead> */
+}
+#edit-table tbody td:hover::before {
+  /* no pseudo; we’ll do via JS for header enlargement */
+}
+
+/* ====================== SAVE / CANCEL BAR ====================== */
+#edit-modal .actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+#edit-modal button.save-btn,
+#edit-modal button.cancel-btn {
+  background: linear-gradient(135deg,#4a90e2,#9013fe);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+#edit-modal button.cancel-btn {
+  background: #444;
+}
+#edit-modal button.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74,144,226,0.7);
+}
+#edit-modal button.cancel-btn:hover {
+  background: #555;
+}
+
+/* ─────────── TOAST NOTIFICATION (centered) ─────────── */
+#toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  /* translate(-50%, -50%) moves the element back by half its own width & height */
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 2000;
+}
+
+#toast.visible {
+  opacity: 1;
+}
+
+
+/* ---------------- SAVE button in the details pane ---------------- */
+.detail-save-btn{
+  display: none;
+  position: relative;
+  bottom: 50px;
+  margin-left: 95%;
+  background:#272727;          /* same grey pill as your other buttons */
+  color:#ccc;
+  border:none;
+  border-radius:6px;
+  padding:6px 12px;
+  cursor:pointer;
+  font-size:.95rem;
+  transition:.2s;
+           /* keeps it away from the print icon   */
+}
+.detail-save-btn:not(:disabled):hover{
+  background:#333;
+  color:#fff;
+  box-shadow:0 2px 12px rgba(0,0,0,.8);
+  transform:scale(1.5);
+}
+.detail-save-btn:disabled{
+  opacity:.35;                 /* grey-out & block clicks            */
+  pointer-events:none;
+  transform:none;
+}
+
+/* the two kinds of editors */
+.note-input, .note-textarea{
+  width:100%;
+  box-sizing:border-box;
+  background:#121212;
+  color:#eee;
+  border:1px solid #444;
+  border-radius:4px;
+  font:1rem/1.4 'Montserrat',sans-serif;
+  padding:6px 8px;
+}
+.note-textarea{ min-height:120px; resize:vertical; }
+
+
+.detail-save-btn:not(:disabled) {
+  box-shadow: 0 0 0 2px #4a90e2;
+}
+
+
+
+/* 1) Turn the TH into a flex container, so its children (the two icons) are
+      vertically centered inside the same row-height as all the other <th> cells */
+th.header-actions {
+  display: flex;
+  align-items: center;       /* vertically center whatever is inside */
+  justify-content: flex-end; /* push them to the right edge (same as text-align:right) */
+  padding: 0 12px;           /* You can tweak top/bottom padding if you want it tighter/looser */
+  /* Make sure you remove any extra “padding-top” or “padding-bottom” here if
+     you want them exactly the same height as the other <th> cells. */
+}
+
+/* 2) The inner wrapper simply holds the two icons side-by-side with a small gap */
+.header-icon-wrapper {
+  display: inline-flex;
+  align-items: center; /* center 🖨️ and ✏️ inside their own box (though the TH is doing most of it) */
+  gap: 20px;            /* 8px horizontal space between the two buttons */
+}
+
+/* 3) Finally, make sure the buttons themselves do not introduce additional vertical padding */
+#print-btn,
+#edit-btn {
+  height: 40px;
+  width: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #272727;
+  color: #ccc;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.2s;
+  /* remove any “margin-right” or large vertical margins */
+}
+
+#print-btn:hover,
+#edit-btn:hover {
+  background: #333;
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.8);
+  transform: scale(1.2);
+}
+
+/*-----------------------------------------------------------------------------------
+  (Optional) STEP 4: If you want a hover effect, keep it roughly the same as before
+-----------------------------------------------------------------------------------*/
+#print-btn:hover,
+#edit-btn:hover {
+  background: #333;
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.8);
+  transform: scale(1.2);
+}
+
+/* ====================== RESPONSIVE ADJUSTMENTS ====================== */
+@media(max-width: 800px) {
+  #edit-modal {
+    padding: 16px;
+  }
+  #edit-modal header h2 {
+    font-size: 1.6rem;
+  }
+  #edit-table thead th,
+  #edit-table tbody td {
+    font-size: 0.9rem;
+  }
+  #edit-modal button.save-btn,
+  #edit-modal button.cancel-btn {
+    font-size: 0.9rem;
+    padding: 10px 20px;
+  }
+}
+
 /* LOGIN OVERLAY */
 #login-overlay {
   position: fixed;
@@ -704,12 +1060,12 @@ font-size:150%;
 }
 
 
-/* blur the page until login succeeds */
+ blur the page until login succeeds 
 #scoreboard-container.blurred {
   filter: blur(6px);
   transition: filter .3s ease;
 }
-/* error message under the login form */
+ error message under the login form 
 #login-error {
   color: #ff8c00;
   font-size: 0.9rem;
@@ -751,7 +1107,9 @@ font-size:150%;
     </div>
   </div>
 
-<div class="container blurred" id="scoreboard-container">
+ <!-- <div class="container blurred" id="scoreboard-container"> -->
+
+  <div class="container blurred" id="scoreboard-container" >
     <div class="brand-row">
       <img src="logo.png" class="logo" alt="Hilton Logo">
       <img src="vegas.png" class="vegas-logo" alt="Vegas Logo">
@@ -786,13 +1144,21 @@ font-size:150%;
           <th data-key="rescission">Rescission %</th>
           <th data-key="transactions">Transactions</th>
           <th data-key="issues">Open Issues</th>
+          <!-- 1) File‐Upload column -->
           <th id="uploadth">
-            <button class="file-btn" id="file-btn">📁</button>
-            <input type="file" id="file-input" accept=".xlsx" style="display:none">
+              <button class="file-btn" id="file-btn">📁</button>
+              <input type="file" id="file-input" accept=".xlsx" style="display:none">
           </th>
-          <th>
-            <button class="print-btn" id="print-btn" style="display:none;">🖨️</button>
-          </th>
+
+          <!-- 2) Print button sits in its own <th> -->
+          <th class="header-actions">
+  <div class="header-icon-wrapper">
+    <button class="print-btn" id="print-btn" style="display:none;">🖨️</button>
+    <button class="file-btn"  id="edit-btn"  style="display:none;">✏️</button>
+  </div>
+</th>
+
+
         </tr>
       </thead>
       <tbody id="scoreboard-body"></tbody>
@@ -807,20 +1173,66 @@ font-size:150%;
     <span class="vs">VS</span>
     <span id="cmp-right" class="cmp-name-big"></span>
   </div>
+  
+  
+      
 
   <div id="compare-rows"></div>
 </div>
 </div>
+
+
+
+
+<!-- ===================== EDIT MODAL OVERLAY ===================== -->
+<div id="edit-overlay">
+  <div id="edit-modal">
+    <header>
+      <h2>Edit Scores & Metrics</h2>
+      <button class="close-edit" aria-label="Close editor">✖</button>
+    </header>
+
+    <!-- This table is generated dynamically via JavaScript -->
+    <table id="edit-table">
+      <thead>
+        <tr>
+          <th>HGV QA</th>
+          <th>Score</th>
+          <th>Accuracy %</th>
+          <th>Rescission %</th>
+          <th>Transactions</th>
+          <th>Open Issues</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows are injected by JS -->
+      </tbody>
+    </table>
+
+    <div class="actions">
+      <button class="cancel-btn">Cancel</button>
+      <button class="save-btn">Save</button>
+    </div>
+  </div>
 </div>
+
+
+  </div>
+  
+  
+  
+ <!--</div>-->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable"></script>
   <script>
     let howManyCompareSelected = 0;
+    let users = [];
     const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     let currentMonth = "May";
     let siteSelected = "Elara";
     const scoreboardData = {}, sortConfig = { column:'overall', direction:'desc' }, compareSelection = new Set();
+
 
     const fullMonthNames = {
   Jan: "January",
@@ -854,8 +1266,9 @@ function loadSiteFile(site) {
       
   
 document.addEventListener("DOMContentLoaded", () => {
+  loadUsers();
   loadSiteFile(siteSelected);
-  initUI();
+      initUI();
      
     
 });
@@ -938,6 +1351,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("file-input").style.display ="none";
       document.getElementById("uploadth").style.display   ="none";
       document.getElementById("print-btn").style.display  ="block";
+      document.getElementById("edit-btn").style.display = "inline-flex";
 
       selectMonth(currentMonth, document.querySelector(`.month-btn[data-month="${currentMonth}"]`));
     }
@@ -980,6 +1394,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="details-container">
               <div class="details-header">
                 <h3>Details for ${r.name}</h3>
+		
                 <button class="detail-print-btn">🖨️</button>
               </div>
               <div class="detail-charts">
@@ -999,108 +1414,118 @@ document.addEventListener("DOMContentLoaded", () => {
                 }).join('')}
               </div>
               
-              <div class="notes-detail-container"></div>
+              <div class="notes-detail-container" contenteditable="true"></div>
+              <button class="detail-save-btn" disabled>💾</button>
             </div>
           </td>`;
-        const container=detailTr.querySelector('.details-container');
-        tr.addEventListener('click',()=>{
-          if(detailTr.classList.contains('visible')){
-            const h=container.scrollHeight; container.style.height=h+'px';
-            requestAnimationFrame(()=>container.style.height='0');
-            detailTr.classList.remove('visible');
-          } else {
-            detailTr.classList.add('visible');
-            requestAnimationFrame(()=>container.style.height=container.scrollHeight+'px');
-            drawDetailCharts(r);
-            
-            
-            const historyCt = detailTr.querySelector('.history-container');
-const chartWrappers = Array.from(detailTr.querySelectorAll('.chart-wrapper'));
+const container = detailTr.querySelector('.details-container');
 
-// renderHistory: fills .history-container for a given metric
-function renderHistory(row, metricKey) {
-  const historyCt = detailTr.querySelector('.history-container');
-  historyCt.innerHTML = '';
+tr.addEventListener('click', () => {
+  if (detailTr.classList.contains('visible')) {
+    // ─── Collapse the detail pane ───
+    const h = container.scrollHeight;
+    container.style.height = h + 'px';
+    requestAnimationFrame(() => container.style.height = '0');
+    detailTr.classList.remove('visible');
+  } else {
+    // ─── Expand the detail pane to show the charts ───
+    detailTr.classList.add('visible');
+    requestAnimationFrame(() => {
+      container.style.height = container.scrollHeight + 'px';
+    });
+    drawDetailCharts(r);
 
-  // 1) Gather the 12 monthly values (null if missing/0)
-  const values = months.map(m => {
-    const rec = (scoreboardData[m]||[]).find(u=>u.name===row.name);
-    return rec && rec[metricKey] != null && rec[metricKey] !== 0
-      ? rec[metricKey]
-      : null;
-  });
+    const historyCt     = detailTr.querySelector('.history-container');
+    const chartWrappers = Array.from(detailTr.querySelectorAll('.chart-wrapper'));
 
-  // 2) Filter to only the months with actual numbers
-  const numeric = values.filter(v=>v != null);
+    // renderHistory: fills .history-container for a given metric
+    function renderHistory(row, metricKey) {
+      historyCt.innerHTML = '';
 
-  // 3) Decide if lower-is-better for this metric
-  const lowBetter = (metricKey === 'rescission' || metricKey === 'issues');  // LOW-BETTER
+      // 1) Gather the 12 monthly values (null if missing/0)
+      const values = months.map(m => {
+        const rec = (scoreboardData[m]||[]).find(u => u.name === row.name);
+        return (rec && rec[metricKey] != null && rec[metricKey] !== 0)
+          ? rec[metricKey]
+          : null;
+      });
 
-  // 4) Compute best/worst according to that rule
-  let best = null, worst = null;
-  if (numeric.length) {
-    if (lowBetter) {
-      // for rescission & issues: best = min, worst = max
-      best  = Math.min(...numeric);
-      worst = Math.max(...numeric);
-    } else {
-      // for all others: best = max, worst = min
-      best  = Math.max(...numeric);
-      worst = Math.min(...numeric);
+      // 2) Filter to only the months with actual numbers
+      const numeric = values.filter(v => v != null);
+
+      // 3) Decide if lower-is-better for this metric
+      const lowBetter = (metricKey === 'rescission' || metricKey === 'issues');
+
+      // 4) Compute best/worst according to that rule
+      let best = null, worst = null;
+      if (numeric.length) {
+        if (lowBetter) {
+          best  = Math.min(...numeric);
+          worst = Math.max(...numeric);
+        } else {
+          best  = Math.max(...numeric);
+          worst = Math.min(...numeric);
+        }
+        if (best === worst) worst = null; // if all equal, highlight only “best”
+      }
+
+      // 5) Render each pill
+      months.forEach((m, i) => {
+        const v = values[i];
+        const pill = document.createElement('div');
+        pill.className = 'history-item';
+
+        if (v == null) {
+          pill.textContent = `${m}: N/A`;
+        } else {
+          const suf = /^(accuracy|rescission)$/.test(metricKey) ? '%' : '';
+          pill.textContent = `${m}: ${v}${suf}`;
+
+          if (v === best)      pill.classList.add('best');
+          else if (v === worst) pill.classList.add('worst');
+        }
+        historyCt.appendChild(pill);
+      });
     }
-    // if they’re all equal, we’ll just highlight “best”
-    if (best === worst) worst = null;
-  }
 
-  // 5) Render each pill
-  months.forEach((m,i) => {
-    const v = values[i];
-    const pill = document.createElement('div');
-    pill.className = 'history-item';
-
-    if (v == null) {
-      pill.textContent = `${m}: N/A`;
-    } else {
-      const suf = /^(accuracy|rescission)$/.test(metricKey) ? '%' : '';
-      pill.textContent = `${m}: ${v}${suf}`;
-
-      if (v === best)      pill.classList.add('best');   // dark-green
-      else if (v === worst) pill.classList.add('worst');  // dark-red
-    }
-
-    historyCt.appendChild(pill);
-  });
-}
-
-
-// wire up click on each chart
+    // Wire up click on each chart
 chartWrappers.forEach(wrapper => {
   wrapper.addEventListener('click', () => {
-    const historyCt = detailTr.querySelector('.history-container');
+    const wasVisible = historyCt.classList.contains('visible');
 
-    // if clicking the *same* active chart, clear everything:
+    // If clicking the same active chart → hide history
     if (wrapper.classList.contains('active')) {
       wrapper.classList.remove('active');
       historyCt.classList.remove('visible');
       historyCt.innerHTML = '';
+
+      // ─── FORCE the container to shrink back up ───
+      // We know we removed 12‐month pills, so we subtract their height.
+      // You may need to tweak "80" up or down to exactly match the strip’s height.
+      container.style.height = (container.scrollHeight - 80) + 'px';
       return;
     }
 
-    // otherwise, clear old and mark this one active
+    // Otherwise: deselect all other charts, mark this one active
     chartWrappers.forEach(w => w.classList.remove('active'));
     wrapper.classList.add('active');
 
-    // compute & render new history…
+    // Compute & render new history…
     const canvas = wrapper.querySelector('canvas');
     const metric = canvas.id.split('-').pop();
     renderHistory(r, metric);
 
-    // and show the strip
+    // And show the strip
     historyCt.classList.add('visible');
+
+    // ─── ONLY IF the history strip was previously hidden do we expand further ───
+    if (!wasVisible) {
+      container.style.height = container.scrollHeight + 'px';
+    }
   });
 });
-          }
-        });
+  }
+});
 
         // — NEW: individual print — 
         detailTr.querySelector('.detail-print-btn')
@@ -1112,64 +1537,157 @@ chartWrappers.forEach(wrapper => {
 // 1) grab the two elements we need
 const detailContainer = detailTr.querySelector('.details-container');
 const detailBox       = detailTr.querySelector('.notes-detail-container');
+const saveDetailsBtn       = detailTr.querySelector('.detail-save-btn');
 const toggles         = Array.from(detailTr.querySelectorAll('.note-toggle'));
 
+
 // 2) internal state
+
+// We will store the “original” text when a panel first opens:
+let originalNoteValue = "";
+
+// We also need a flag so that only the first time we open, we do certain setup:
 let notesOpened = false;
 let baseHeight  = 0;
 
 toggles.forEach(btn => {
   btn.addEventListener('click', ev => {
     ev.stopPropagation();
-    const isActive = btn.classList.contains('active');
 
-    // ——— CASE A: clicking the same active button → collapse everything ———
+    const isActive = btn.classList.contains('active');
+    const key      = btn.dataset.key;   // e.g. "PTO" or "Sick Time" or "Written"
+
     if (isActive) {
+      // ─── Collapse the note‐panel ───
       btn.classList.remove('active');
       detailBox.classList.remove('open');
-      detailBox.textContent = '';
+      detailBox.textContent = "";
       notesOpened = false;
 
-      // animate panel back up
+      // Animate height collapse if you like:
       requestAnimationFrame(() => {
-        detailContainer.style.height = detailContainer.scrollHeight - baseHeight + 150 + 'px';
+        detailContainer.style.height = (detailContainer.scrollHeight - baseHeight + 150) + 'px';
       });
 
-
+      // Hide & disable Save button once collapsed:
+      saveDetailsBtn.style.display  = "none";
+      saveDetailsBtn.disabled      = true;
       return;
     }
 
-    // ——— CASE B: nothing’s open yet → first open, record height & expand ———
+    // ─── Otherwise, open (or swap) the note‐panel ───
     if (!notesOpened) {
+      // First time opening any panel in this detailTr:
       baseHeight = detailContainer.scrollHeight;
       notesOpened = true;
 
-      // activate this one
+      // Mark this toggle as active, fill in the old content, set border color:
+      toggles.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      detailBox.textContent = r[btn.dataset.key] || "";
-      detailBox.style.borderColor =
-        getComputedStyle(btn).getPropertyValue('--toggle-border-color').trim();
+
+      // Grab the previous note from the data model:
+      const prevValue = r[key] || "";
+      originalNoteValue = prevValue;
+
+      // Populate the contenteditable div with the old note:
+      detailBox.textContent = prevValue;
+
+      // Copy the border color from the button’s custom property:
+      const color = getComputedStyle(btn).getPropertyValue('--toggle-border-color').trim();
+      detailBox.style.borderColor = color;
+
+      // Make the detailBox visible/open:
       detailBox.classList.add('open');
 
-      // animate container down
+      // Expand container’s height to accommodate the note area:
       requestAnimationFrame(() => {
         detailContainer.style.height = detailContainer.scrollHeight + 'px';
       });
 
-    // ——— CASE C: panel already open but different button → just swap content ———
+      // Show Save button, but keep it DISABLED until user types something:
+      saveDetailsBtn.style.display  = "block";
+      saveDetailsBtn.disabled      = true;   // still disabled because no edits yet
+
+      // ─── Now attach an `input` listener to detailBox so we can detect changes ───
+      // (We remove any previous listener first, to avoid duplicates.)
+      detailBox.removeEventListener('input', onNoteInput);
+      detailBox.addEventListener('input', onNoteInput);
+
     } else {
-      // clear previous
+      // ─── Panel was already open for some other field, just “swap” content ───
       toggles.forEach(b => b.classList.remove('active'));
-
-      // activate this one
       btn.classList.add('active');
-      detailBox.textContent = r[btn.dataset.key] || "";
-      detailBox.style.borderColor =
-        getComputedStyle(btn).getPropertyValue('--toggle-border-color').trim();
 
-      // **no height change here**, so the panel stays put
+      // Grab and show the previous note for this key:
+      const prevValue = r[key] || "";
+      originalNoteValue = prevValue;
+      detailBox.textContent = prevValue;
+
+      // Update border‐color to match the newly active button:
+      const color = getComputedStyle(btn).getPropertyValue('--toggle-border-color').trim();
+      detailBox.style.borderColor = color;
+
+      // Because we’ve just “swapped” content, re‐disable the Save button again:
+      saveDetailsBtn.disabled = true;
     }
   });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// 2) This function is called on every single keystroke (or paste) inside
+//    `detailBox` (the contenteditable <div>), so we can compare its current
+//    text to `originalNoteValue`. If they differ, enable Save; otherwise keep
+//    it disabled.
+// ────────────────────────────────────────────────────────────────────────────
+function onNoteInput() {
+  const trimmedNow = detailBox.innerText.trim();
+  const trimmedOrig = originalNoteValue.trim();
+  // If user’s current text does _not_ match what was originally loaded,
+  // allow them to click “Save.” Otherwise keep Save disabled.
+  saveDetailsBtn.disabled = (trimmedNow === trimmedOrig);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 3) Finally, your “Save” click handler. Once Save is clicked, you persist to
+//    scoreboardData and then immediately disable the Save button again.
+// ────────────────────────────────────────────────────────────────────────────
+saveDetailsBtn.addEventListener('click', () => {
+  // Find which toggle is active:
+  const activeToggle = toggles.find(b => b.classList.contains('active'));
+  if (!activeToggle) return;
+  const key = activeToggle.dataset.key; // e.g. "Written", "PTO", etc.
+
+  // Grab the new text from detailBox:
+  const newValue = detailBox.innerText.trim();
+
+  // 1) Persist back into your data model:
+  const personArray = scoreboardData[currentMonth] || [];
+  const personObj   = personArray.find(u => u.name === r.name);
+  if (personObj) {
+    personObj[key] = newValue;   // update the in‐memory object
+    r[key]         = newValue;   // keep the local `r` object in sync
+  }
+
+  // 2) Update the button’s “has-note” class so it stays orange if there’s content:
+  if (newValue) {
+    activeToggle.classList.add('has-note');
+  } else {
+    activeToggle.classList.remove('has-note');
+  }
+
+  // 3) Re‐apply the border color (in case user cleared the note entirely):
+  const borderColor = getComputedStyle(activeToggle)
+                          .getPropertyValue('--toggle-border-color')
+                          .trim();
+  detailBox.style.borderColor = borderColor;
+
+  // 4) Now that we just saved, disable “Save” again:
+  saveDetailsBtn.disabled = true;
+  originalNoteValue = newValue;  // reset the “original” to what they just saved
+
+  // 5) Show a toast:
+  const spelledMonth = fullMonthNames[currentMonth].toUpperCase();
+  showToast(`${spelledMonth} ${key} successfully modified for ${r.name}!`);
 });
 
         // compare logic (unchanged)
@@ -1196,13 +1714,6 @@ function updateTopOverall(mon){
   const arr = (scoreboardData[mon]||[]).sort((a,b)=>b.overall-a.overall);
   const top = arr[0]||{};
   document.getElementById("top-overall").textContent = `#1: ${top.name||'—'}`;
-
-  // replace the image entirely with our text label
-  const avatar = document.getElementById("top1-avatar");
-  avatar.textContent = "Quality Assurance";
-  avatar.style.fontSize   = "1.2rem";
-  avatar.style.fontWeight = "700";
-  avatar.style.color      = "#fff";
 }
 
 function drawDetailCharts(r) {
@@ -1344,7 +1855,7 @@ function showComparison() {
 
   const labels     = ['Overall','Accuracy %','Rescission %','Transactions','Open Issues'];
   const keys       = ['overall','accuracy','rescission','transactions','issues'];
-  const highBetter = new Set(['Overall','Accuracy','Transactions']);
+  const highBetter = new Set(['Overall','Accuracy %','Transactions']);
 
   const container = document.getElementById('compare-rows');
   container.innerHTML = '';
@@ -1621,7 +2132,7 @@ didParseCell: function(data) {
   });
 
   // ——— 5) Save ———
-  doc.save(`${siteSelected}-${currentMonth}.pdf`);
+  doc.save(`Elara-${currentMonth}.pdf`);
 }
 
 
@@ -1956,80 +2467,266 @@ items.forEach(btn => {
 
 
 // — 1) load and parse Users.xlsx
-async function loadUsers() {
-    try {
-      const resp = await fetch('Users.xlsx');
-      if (!resp.ok) {
-        throw new Error(`Network response was not OK (${resp.status})`);
-      }
-      const ab  = await resp.arrayBuffer();
-      const wb  = XLSX.read(ab, { type: 'array' });
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const raw = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
-      return raw.map(r => ({
+function loadUsers() {
+  fetch('Users.xlsx')
+    .then(r => {
+      if (!r.ok) throw new Error('Could not fetch Users.xlsx');
+      return r.arrayBuffer();
+    })
+    .then(ab => {
+      const wb = XLSX.read(ab, { type:'array' });
+      const sheet = wb.SheetNames[0];
+      const raw   = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval:'' });
+      users = raw.map(r => ({
+        fullname: String(r.User     || '').trim(),
         username: String(r.Username || '').trim().toLowerCase(),
         password: String(r.Password || '').trim(),
-        access: (String(r.Access || '')
-                   .split(',')
-                   .map(x => x.trim().toLowerCase())
-                   .filter(Boolean))
+        access:   String(r.Access   || '')  // comma-separated
+                     .split(',')
+                     .map(s=>s.trim().toLowerCase())
+                     .filter(Boolean)
       }));
-    } catch (e) {
-      console.error('Failed to load or parse Users.xlsx:', e);
-      // show a user-friendly error
-      const errBox = document.getElementById('login-error');
-      if (errBox) {
-        errBox.textContent = 'Unable to load user list. Please try again later.';
-      }
-      // return an empty array so the rest of your code doesn’t blow up
-      return [];
+    })
+    .catch(console.error);
+}
+
+
+
+// — 2) Utility: filter the site-switcher to only allowed sites
+function applyAccessFilter(accessList) {
+  // all buttons: main + fly-out items
+  const mainBtn = document.getElementById('site-btn-main');
+  const items   = Array.from(document.querySelectorAll('.site-switcher-item'));
+  const allBtns = [ mainBtn, ...items ];
+  
+  // remove any button whose textContent isn't in the accessList
+  allBtns.forEach(btn => {
+    const name = btn.textContent.trim().toLowerCase();
+    if (!accessList.includes(name)) {
+      btn.remove();
     }
-  }
+  });
 
-  (async function bootstrap() {
-    const users = await loadUsers();
-
-document
-  .getElementById('login-form')
-  .addEventListener('submit', async ev => {
-    ev.preventDefault();
-    const u   = document.getElementById('login-user').value.trim().toLowerCase();
-    const p   = document.getElementById('login-pass').value.trim();
-    const err = document.getElementById('login-error');
-    err.textContent = '';  // clear old errors
-
-    // after you’ve loaded “users” and read in “u” + “p”:
-let isValid = false;
-
-for (const user of users) {
-  // Debug‐help: log what you’re comparing
-
-
-
-  if (user.username === u && user.password === p) {
-    isValid = true;
-    break;    // stop as soon as you find a match
+  // if the current mainBtn was removed, pick the first remaining button:
+  if (!document.getElementById('site-btn-main')) {
+    const leftover = document.querySelector('.site-switcher button');
+    if (leftover) {
+      leftover.id = 'site-btn-main';
+      leftover.classList.add('active');
+    }
   }
 }
 
-    if (!isValid) {
+document.getElementById('login-form').addEventListener('submit', ev => {
+  ev.preventDefault(); // stop the form from reloading the page
 
-      // bad login → show error and stop
-      err.textContent = 'Invalid username or password';
-      return;
-    }
+  const errBox = document.getElementById('login-error');
+  const usernameInput = document.getElementById('login-user').value.trim().toLowerCase();
+  const passwordInput = document.getElementById('login-pass').value;
 
-    // good login → tear down overlay
-    document.getElementById('scoreboard-container')
-            .classList.remove('blurred');
-    const ov = document.getElementById('login-overlay');
-    ov.style.transition = 'opacity .5s ease';
-    ov.style.opacity    = 0;
-    ov.addEventListener('transitionend', () => ov.remove());
+  // 1) Find a matching user in the `users` array
+  const matchedUser = users.find(u => u.username === usernameInput);
+
+  if (!matchedUser || matchedUser.password !== passwordInput) {
+    // Credentials are invalid:
+    errBox.textContent = 'Invalid username or password.';
+    return;
+  }
+
+  // 2) Credentials are valid → filter the site-switcher
+  applyAccessFilter(matchedUser.access);
+
+  // 3) Un‐blur the scoreboard and remove the overlay
+  document.getElementById('scoreboard-container').classList.remove('blurred');
+
+  const overlay = document.getElementById('login-overlay');
+  overlay.style.transition = 'opacity 0.5s ease';
+  overlay.style.opacity = '0';
+  overlay.addEventListener('transitionend', () => {
+    overlay.remove();
   });
-  })();
+});
+
+
+ ====== 1) Show the Edit button once an .xlsx is loaded ====== */
+/* -------------------------------------------
+   Place this snippet right after:
+     document.getElementById("print-btn").style.display  ="block";
+   inside your parseWorkbook() function
+------------------------------------------- */
+// (If you want to hide it again when no workbook is loaded, add the inverse in your loadSiteFile or wherever appropriate.)
+
+
+
+/* ====== 2) Build & show the Edit modal ====== */
+/* -------------------------------------------
+------------------------------------------- */
+(function(){
+  const overlay    = document.getElementById("edit-overlay");
+  const modal      = document.getElementById("edit-modal");
+  const tbody      = document.querySelector("#edit-table tbody");
+  const saveBtn    = modal.querySelector(".save-btn");
+  const cancelBtn  = modal.querySelector(".cancel-btn");
+  const closeBtn   = modal.querySelector(".close-edit");
+  const editBtn    = document.getElementById("edit-btn");
+
+  // --------------- Utility: clear any old rows ---------------
+  function clearEditTable() {
+    while(tbody.firstChild) {
+      tbody.removeChild(tbody.firstChild);
+    }
+  }
+
+  // --------------- Utility: create one <tr> of inputs ---------------
+  function createEditableRow(rowData, rowIndex) {
+    // rowData is an object with: { name, overall, accuracy, rescission, transactions, issues, … }
+    const tr = document.createElement("tr");
+
+    // 1) First column: name (non-editable, but wrap in <td class="name-cell">)
+    const tdName = document.createElement("td");
+    tdName.classList.add("name-cell");
+    tdName.textContent = rowData.name || "";
+    tr.appendChild(tdName);
+
+    // 2) For each metric, create <td><input …></td>
+    const fields = ["overall", "accuracy", "rescission", "transactions", "issues"];
+    fields.forEach(key => {
+      const td = document.createElement("td");
+      const input = document.createElement("input");
+      input.type = "text";
+
+      // Pre-populate with existing value if available; else leave blank
+      const existing = rowData[key];
+      input.value = (existing !== undefined && existing !== null) ? existing : "";
+
+      // Keep data-key, data-row-index so we know which to update on Save
+      input.dataset.key = key;
+      input.dataset.rowIndex = rowIndex;
+
+      // Add event listeners to highlight the header <th> + name-cell when hovered
+      input.addEventListener("mouseenter", () => {
+        // 1) enlarge the corresponding <th> in the THEAD
+        const ths = document.querySelectorAll("#edit-table thead th");
+        const allFields = ["name","overall","accuracy","rescission","transactions","issues"];
+        const colIdx = allFields.indexOf(key); // 0=name, 1=overall, 2=accuracy ...
+        if (colIdx >= 0 && ths[colIdx]) {
+          ths[colIdx].style.color = "#4a90e2";
+        }
+        // 2) enlarge the user’s <td class="name-cell">
+        tdName.style.fontSize = "1.2rem";
+        tdName.style.color = "#4a90e2";
+      });
+      input.addEventListener("mouseleave", () => {
+        // revert header
+        const ths = document.querySelectorAll("#edit-table thead th");
+        const allFields = ["name","overall","accuracy","rescission","transactions","issues"];
+        const colIdx = allFields.indexOf(key);
+        if (colIdx >= 0 && ths[colIdx]) {
+          ths[colIdx].style.fontSize = "";
+          ths[colIdx].style.color = "";
+        }
+        // revert name-cell
+        tdName.style.fontSize = "";
+        tdName.style.color = "";
+      });
+
+      td.appendChild(input);
+      tr.appendChild(td);
+    });
+
+    return tr;
+  }
+
+  // --------------- Function: populate the table for currentMonth ---------------
+  function populateEditTable() {
+    clearEditTable();
+    const dataArr = scoreboardData[currentMonth] || [];
+    dataArr.forEach((rowData, i) => {
+      // We want each row in exactly the same order as the main table’s sort
+      // BUT here, for simplicity, just loop in array order (you can sort first if desired)
+      const tr = createEditableRow(rowData, i);
+      tbody.appendChild(tr);
+    });
+  }
+
+  // --------------- Open the modal when “Edit” is clicked ---------------
+  editBtn.addEventListener("click", () => {
+    // 1) Build the table rows
+    populateEditTable();
+    // 2) Show overlay
+    overlay.style.display = "flex";
+    // 3) Prevent the underlying page from scrolling
+    document.body.style.overflow = "hidden";
+  });
+
+  // --------------- Close overlays (Cancel or “X”) ---------------
+  function closeModal() {
+    overlay.style.display = "none";
+    document.body.style.overflow = ""; // restore scroll
+    clearEditTable();
+  }
+  cancelBtn.addEventListener("click", closeModal);
+  closeBtn.addEventListener("click", closeModal);
+
+  // --------------- Save changes ---------------
+  saveBtn.addEventListener("click", () => {
+    const inputs = tbody.querySelectorAll("input");
+    inputs.forEach(input => {
+      const key = input.dataset.key;                // e.g. "accuracy"
+      const idx = parseInt(input.dataset.rowIndex); // e.g. 4
+      const val = input.value.trim();
+
+      // Convert to number if possible, else 0
+      let num = parseFloat(val);
+      if (isNaN(num)) num = 0;
+
+      // Update the in-memory data
+      if (scoreboardData[currentMonth] && scoreboardData[currentMonth][idx]) {
+        scoreboardData[currentMonth][idx][key] = num;
+      }
+    });
+
+    // 1) Re-render the main scoreboard
+    renderTable(currentMonth);
+    updateTopOverall(currentMonth);
+
+    // 2) Close the modal
+    showToast("Changes have been saved!");
+    closeModal();
+    
+  });
+
+  // --------------- Close if clicking outside the modal box ---------------
+  overlay.addEventListener("click", e => {
+    if (e.target === overlay) {
+      closeModal();
+    }
+  });
+})();
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  
+  toast.textContent = message;       // set our custom text
+  toast.classList.add("visible");    // fade in
+
+  // After 3s, fade out again
+  setTimeout(() => {
+    toast.classList.remove("visible");
+  }, 5000);
+}
+
+
+
+
     
   </script>
+  
+  <!-- ─────────── TOAST CONTAINER ─────────── -->
+<div id="toast"></div>
+  
+  
 </body>
 </html>
