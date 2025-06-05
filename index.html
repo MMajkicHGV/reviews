@@ -2493,69 +2493,67 @@ function loadUsers() {
 
 
 
-// — 2) Utility: filter the site-switcher to only allowed sites
-function applyAccessFilter(accessList) {
-  // all buttons: main + fly-out items
-  const mainBtn = document.getElementById('site-btn-main');
-  const items   = Array.from(document.querySelectorAll('.site-switcher-item'));
-  const allBtns = [ mainBtn, ...items ];
-  
-  // remove any button whose textContent isn't in the accessList
-  allBtns.forEach(btn => {
-    const name = btn.textContent.trim().toLowerCase();
-    if (!accessList.includes(name)) {
-      btn.remove();
-    }
-  });
-
-  // if the current mainBtn was removed, pick the first remaining button:
-  if (!document.getElementById('site-btn-main')) {
-    const leftover = document.querySelector('.site-switcher button');
-    if (leftover) {
-      leftover.id = 'site-btn-main';
-      leftover.classList.add('active');
+// 1) Utility to show/hide buttons based on access:
+  function applyAccessFilter(accessList) {
+    const mainBtn = document.getElementById("site-btn-main");
+    const items   = Array.from(document.querySelectorAll(".site-switcher-item"));
+    const allBtns = [ mainBtn, ...items ];
+    allBtns.forEach(btn => {
+      if (btn) {
+        const name = btn.textContent.trim().toLowerCase();
+        if (!accessList.includes(name)) {
+          btn.remove();
+        }
+      }
+    });
+    // If we removed #site-btn-main itself, pick the first leftover button:
+    if (!document.getElementById("site-btn-main")) {
+      const leftover = document.querySelector(".site-switcher button");
+      if (leftover) {
+        leftover.id = "site-btn-main";
+        leftover.classList.add("active");
+      }
     }
   }
-}
 
-document.getElementById('login-form').addEventListener('submit', ev => {
-  ev.preventDefault(); // stop the form from reloading the page
+  // 2) Assume loadUsers() is already defined and has populated `users[]`.
 
-  const errBox = document.getElementById('login-error');
-  const usernameInput = document.getElementById('login-user').value.trim().toLowerCase();
-  const passwordInput = document.getElementById('login-pass').value;
+  // ─── Replace your old login-form listener with exactly this: ───
+  document.getElementById("login-form").addEventListener("submit", ev => {
+    ev.preventDefault(); // prevent full-page reload
 
-  // 1) Find a matching user in the `users` array
-  const matchedUser = users.find(u => u.username === usernameInput);
+    const errBox        = document.getElementById("login-error");
+    const usernameInput = document.getElementById("login-user").value.trim().toLowerCase();
+    const passwordInput = document.getElementById("login-pass").value;
 
-  if (!matchedUser || matchedUser.password !== passwordInput) {
-    // Credentials are invalid:
-    errBox.textContent = 'Invalid username or password.';
-    return;
-  }
+    // 1) Look up the user in the `users` array:
+    const matchedUser = users.find(u => u.username === usernameInput);
+    if (!matchedUser || matchedUser.password !== passwordInput) {
+      errBox.textContent = "Invalid username or password.";
+      return;
+    }
 
-  // 2) Credentials are valid → filter the site-switcher
-  applyAccessFilter(matchedUser.access);
+    // 2) Filter out any sites the user does not have access to:
+    applyAccessFilter(matchedUser.access);
 
-// 1) Grab whatever element is now #site-btn-main
+    // ──────────────────────────────────────────
+    // 3) NOW that any unauthorized buttons have been removed, grab the “site” button:
+    const newMainBtn = document.getElementById("site-btn-main");
+    if (newMainBtn) {
+      siteSelected = newMainBtn.textContent.trim();
+      loadSiteFile(siteSelected);
+    } else {
+      console.error("❗ No #site-btn-main found after applyAccessFilter");
+    }
+    // ──────────────────────────────────────────
 
-if (newMainBtn) {
-  // 2) Read its textContent and use it as the new siteSelected
-  siteSelected = newMainBtn.textContent.trim();
-  // 3) Then load that site’s .xlsx
-  loadSiteFile(siteSelected);
-}
-
-  // 3) Un‐blur the scoreboard and remove the overlay
-  document.getElementById('scoreboard-container').classList.remove('blurred');
-
-  const overlay = document.getElementById('login-overlay');
-  overlay.style.transition = 'opacity 0.5s ease';
-  overlay.style.opacity = '0';
-  overlay.addEventListener('transitionend', () => {
-    overlay.remove();
+    // 4) Un-blur the scoreboard and fade out the overlay
+    document.getElementById("scoreboard-container").classList.remove("blurred");
+    const overlay = document.getElementById("login-overlay");
+    overlay.style.transition = "opacity 0.5s ease";
+    overlay.style.opacity    = "0";
+    overlay.addEventListener("transitionend", () => overlay.remove());
   });
-});
 
 /* -------------------------------------------
    Place this snippet right after:
