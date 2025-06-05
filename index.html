@@ -1267,8 +1267,7 @@ function loadSiteFile(site) {
   
 document.addEventListener("DOMContentLoaded", () => {
   loadUsers();
-  loadSiteFile(siteSelected);
-      initUI();
+
      
     
 });
@@ -2536,6 +2535,8 @@ document.getElementById('login-form').addEventListener('submit', ev => {
 
   // 2) Credentials are valid → filter the site-switcher
   applyAccessFilter(matchedUser.access);
+  siteSelected = newMainBtn.textContent.trim();
+  loadSiteFile(siteSelected);
 
   // 3) Un‐blur the scoreboard and remove the overlay
   document.getElementById('scoreboard-container').classList.remove('blurred');
