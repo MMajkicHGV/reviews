@@ -1327,14 +1327,9 @@ document.addEventListener("DOMContentLoaded", () => {
         mc.appendChild(b);
       });
 
-      document.getElementById("file-btn").onclick    = ()=>document.getElementById("file-input").click();
       document.getElementById("compare-btn").onclick = showComparison;
       document.getElementById("print-btn").onclick   = downloadReport;
-      document.getElementById("file-input").onchange = e=>{
-        const f=e.target.files[0]; if(!f) return;
-        const r=new FileReader(); r.onload=ev=>parseWorkbook(ev.target.result);
-        r.readAsArrayBuffer(f);
-      };
+      
 
       document.querySelectorAll('thead th[data-key]').forEach(th=>{
         th.onclick=()=>{
@@ -1390,9 +1385,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }));
       });
 
-      document.getElementById("file-btn").style.display    ="none";
-      document.getElementById("file-input").style.display ="none";
-      document.getElementById("uploadth").style.display   ="none";
       document.getElementById("print-btn").style.display  ="block";
       document.getElementById("edit-btn").style.display = "inline-flex";
 
