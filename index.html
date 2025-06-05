@@ -1145,7 +1145,7 @@ th.header-actions {
           <th data-key="transactions">Transactions</th>
           <th data-key="issues">Open Issues</th>
           <!-- 1) File‐Upload column -->
-          <th id="uploadth">
+          <th id="uploadth" style="display:none;">
               <button class="file-btn" id="file-btn">📁</button>
               <input type="file" id="file-input" accept=".xlsx" style="display:none">
           </th>
@@ -2534,7 +2534,8 @@ function applyAccessFilter(accessList) {
     overlay.style.transition = "opacity 0.5s ease";
     overlay.style.opacity    = "0";
     overlay.addEventListener("transitionend", () => overlay.remove());
-    initUI();  
+    initUI(); 
+	
   });
 
 /* -------------------------------------------
