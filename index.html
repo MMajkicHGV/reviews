@@ -1232,6 +1232,7 @@ th.header-actions {
     let currentMonth = "May";
     let siteSelected = "Elara";
     const scoreboardData = {}, sortConfig = { column:'overall', direction:'desc' }, compareSelection = new Set();
+    const newMainBtn = document.getElementById('site-btn-main');
 
 
     const fullMonthNames = {
@@ -2537,7 +2538,7 @@ document.getElementById('login-form').addEventListener('submit', ev => {
   applyAccessFilter(matchedUser.access);
 
 // 1) Grab whatever element is now #site-btn-main
-const newMainBtn = document.getElementById('site-btn-main');
+
 if (newMainBtn) {
   // 2) Read its textContent and use it as the new siteSelected
   siteSelected = newMainBtn.textContent.trim();
