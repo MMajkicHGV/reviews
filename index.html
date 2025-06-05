@@ -1064,6 +1064,10 @@ body.blurred {
   box-shadow: 0 4px 16px rgba(0,0,0,0.7);
 }
 
+#header-row.blurred {
+  filter: blur(6px);
+  transition: filter .3s ease;
+}
 
  blur the page until login succeeds 
 #scoreboard-container.blurred {
@@ -1123,7 +1127,7 @@ body.blurred {
       </div>
     </div>
 
-<div class="header-row">
+<div class="header-row blurred">
   <!-- 1) your site-switcher -->
   <span class="site-switcher">
     <button class="text-button active" id="site-btn-main">Elara</button>
@@ -1264,7 +1268,7 @@ function loadSiteFile(site) {
   const url1 = site.charAt(0).toUpperCase() + site.slice(1) + ".xlsx";
 
   // Build the “all uppercase” URL:
-  const url2 = site.toUpperCase() + site.slice(1) + ".xlsx";
+  const url2 = site.toUpperCase() + ".xlsx";
 
   // Attempt the first fetch:
   fetch(url1)
@@ -1296,7 +1300,8 @@ function loadSiteFile(site) {
   
 document.addEventListener("DOMContentLoaded", () => {
   // Wait for users[] to be populated
-  document.body.classList.add('blurred');
+  const header = document.getElementById("header-row");
+  header.classList.add('blurred');
   loadUsers().then(() => {
     const loginForm = document.getElementById("login-form");
     loginForm.addEventListener("submit", ev => {
@@ -1309,7 +1314,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       // Successful login—apply access and un-blur
-      document.body.classList.remove('blurred');
+      header.classList.remove('blurred');
       applyAccessFilter(match.access);
       document.getElementById("login-error").textContent = "";
     });
