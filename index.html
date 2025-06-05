@@ -1254,7 +1254,7 @@ function loadSiteFile(site) {
     delete scoreboardData[month];
   }
   // 2) re-parse the new file
-  fetch(site + '.xlsx')
+  fetch(site.charAt(0).toUpperCase() + site.slice(1) + '.xlsx')
     .then(r => {
       if (!r.ok) throw new Error(`Couldn't load ${site}.xlsx`);
       return r.arrayBuffer();
