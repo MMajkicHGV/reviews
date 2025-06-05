@@ -1267,7 +1267,6 @@ function loadSiteFile(site) {
       
   
 document.addEventListener("DOMContentLoaded", () => {
-  initUI()
   loadUsers();  
 });
       
@@ -2551,6 +2550,7 @@ function loadUsers() {
     overlay.style.transition = "opacity 0.5s ease";
     overlay.style.opacity    = "0";
     overlay.addEventListener("transitionend", () => overlay.remove());
+    initUI();  
   });
 
 /* -------------------------------------------
