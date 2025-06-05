@@ -2535,8 +2535,15 @@ document.getElementById('login-form').addEventListener('submit', ev => {
 
   // 2) Credentials are valid → filter the site-switcher
   applyAccessFilter(matchedUser.access);
+
+// 1) Grab whatever element is now #site-btn-main
+const newMainBtn = document.getElementById('site-btn-main');
+if (newMainBtn) {
+  // 2) Read its textContent and use it as the new siteSelected
   siteSelected = newMainBtn.textContent.trim();
+  // 3) Then load that site’s .xlsx
   loadSiteFile(siteSelected);
+}
 
   // 3) Un‐blur the scoreboard and remove the overlay
   document.getElementById('scoreboard-container').classList.remove('blurred');
