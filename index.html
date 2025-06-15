@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>QA Scoreboard</title>
 
-  <!-- Premium serif for print -->
+  <link href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -28,6 +28,57 @@
     .brand-row .top-right { display:flex; flex-direction:column; align-items:flex-end; gap:12px; }
     .brand-row .top1-name { font-size:30px; font-weight:700; color:#fff; margin-top: 30px;}
     .brand-row .top1-avatar { width:92px; height:92px; border-radius:50%; overflow:hidden; border:2px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,0.7); }
+
+	  /* ───── METRIC CARD ───────────────────────────────────────── */
+.metric-card{
+  --accent-good: #4a90e2;   /* blue  */
+  --accent-bad : #ff8c00;   /* dark orange */
+
+  font-family:'Saira', sans-serif;
+  width:180px;              /* same footprint as a 120‑px doughnut */
+  min-height:180px;
+  padding:18px 14px 24px;
+  border-radius:12px;
+  background:#1d1d1d;
+  box-shadow:0 6px 18px rgba(0,0,0,.45);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  transition:transform .25s ease, box-shadow .25s ease;
+  cursor:pointer;
+}
+.metric-card.active{
+  transform:scale(1.3);                 /* 1.3× on click      */
+  box-shadow:0 8px 24px rgba(0,0,0,.65);
+  z-index:5;                            /* stay on top        */
+}
+
+.metric-card h4{
+  margin:0 0 6px;
+  font-weight:600;
+  font-size:.9rem;
+  letter-spacing:.5px;
+}
+.metric-card .value{
+  font-weight:800;
+  font-size:2.8rem;
+  line-height:1;
+}
+.metric-card .target{
+  margin-top:4px;
+  font-size:.9rem;
+}
+
+/* colours are applied by JS with .met/not‑met class */
+.metric-card.met    h4,
+.metric-card.met    .value,
+.metric-card.met    .target{ color:var(--accent-good); }
+
+.metric-card.notmet h4,
+.metric-card.notmet .value,
+.metric-card.notmet .target{ color:var(--accent-bad); }
 
 
 .header-row {
@@ -1437,10 +1488,11 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="detail-charts">
                 ${['overall','accuracy','rescission','transactions','issues'].map(k=>{
                   const lbl={overall:'Overall',accuracy:'Accuracy',rescission:'Rescission',transactions:'Transactions',issues:'Open Issues'}[k];
-                  return `<div class="chart-wrapper">
-                    <canvas id="chart-${suf}-${k}" width="120" height="120"></canvas>
-                    <p>${lbl}</p>
-                  </div>`;
+                  return `<div class="metric-card" data-key="${k}">
+  <h4>${lbl.toUpperCase()}</h4>
+  <div class="value"></div>
+  <div class="target"></div>
+</div>`;
                 }).join('')}
               </div>
               <div class="history-container"></div>
@@ -2501,6 +2553,45 @@ items.forEach(btn => {
     }
   });
 });
+
+
+function paintDetailMetrics(rowObj, container){
+  const metrics = [
+    { key:'overall',      label:'Overall',      lowBetter:false },
+    { key:'accuracy',     label:'Accuracy %',  lowBetter:false },
+    { key:'rescission',   label:'Rescission %',lowBetter:true  },
+    { key:'transactions', label:'Transactions',lowBetter:false },
+    { key:'issues',       label:'Open Issues', lowBetter:true  }
+  ];
+
+  container.querySelectorAll('.metric-card').forEach(card=>{
+    const k          = card.dataset.key;
+    const cfg        = metrics.find(m=>m.key===k);
+    const val        = rowObj[k];
+    const target     = rowObj[k + 'Target'];
+    const metTarget  = cfg.lowBetter ? val <= target : val >= target;
+
+    card.classList.toggle('met',    metTarget);
+    card.classList.toggle('notmet', !metTarget);
+    card.querySelector('.value').textContent  =
+      /^(accuracy|rescission)$/.test(k) ? `${val}%` : val;
+    card.querySelector('.target').textContent =
+      `TARGET: ${/^(accuracy|rescission)$/.test(k) ? target+'%' : target}`;
+  });
+
+  /* one‑click zoom behaviour */
+  container.querySelectorAll('.metric-card').forEach(card=>{
+    card.onclick = e=>{
+      e.stopPropagation();
+      /* if another card is active, shrink it back */
+      const already = container.querySelector('.metric-card.active');
+      if (already && already !== card) already.classList.remove('active');
+      /* toggle this one */
+      card.classList.toggle('active');
+    };
+  });
+}
+
 
 
 // — 1) load and parse Users.xlsx
